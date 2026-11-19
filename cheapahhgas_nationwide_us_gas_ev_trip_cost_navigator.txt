@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cheapahhgas — Nationwide US Gas, EV &amp; Trip Cost Navigator</title>
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS — LOW-GLARE SLATE-NAVY & MUTED COBALT (DAY & NIGHT)
+       ========================================================================== */
+    :root,
+    [data-theme="light"] {
+      --bg-canvas: #F1F4F8;
+      --bg-surface: #FFFFFF;
+      --bg-elevated: #F8FAFC;
+      --bg-subtle: #E6ECF3;
+      --ink: #10233E;
+      --ink-soft: #4A5C73;
+      --ink-muted: #76889E;
+      --border: #CBD5E1;
+      --border-strong: #94A3B8;
+      --navy: #10233E;
+      --cobalt: #1D4ED8;
+      --cobalt-soft: #EBF2FC;
+      --deal: #16795C;
+      --deal-soft: #E6F4EF;
+      --shadow-sm: 0 1px 3px rgba(16, 35, 62, 0.06);
+      --shadow-md: 0 8px 24px rgba(16, 35, 62, 0.14);
+    }
+
+    [data-theme="dark"] {
+      --bg-canvas: #0C131D;
+      --bg-surface: #141E2C;
+      --bg-elevated: #1A2637;
+      --bg-subtle: #213045;
+      --ink: #E6EDF7;
+      --ink-soft: #9FB0C6;
+      --ink-muted: #6C8099;
+      --border: #27374D;
+      --border-strong: #3E5472;
+      --navy: #5B8FD9;
+      --cobalt: #5B8FD9;
+      --cobalt-soft: rgba(91, 143, 217, 0.16);
+      --deal: #34A885;
+      --deal-soft: rgba(52, 168, 133, 0.16);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.55);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--ink);
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* ==========================================================================
+       2. HEADER & NAVIGATION
+       ========================================================================== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .topbar-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background-color: #10233E;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+
+    .brand-beta {
+      display: inline-block;
+      margin-top: 2px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1.2;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background-color: var(--cobalt-soft);
+      color: var(--cobalt);
+    }
+
+    .badge-aaa {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: var(--cobalt-soft);
+      color: var(--cobalt);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--ink-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .seg-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 6px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border);
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 11px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .seg-btn:hover { color: var(--ink); }
+    .seg-btn.active {
+      background-color: var(--bg-surface);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background-color: var(--bg-surface);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s, background-color 0.15s, transform 0.1s;
+    }
+    .btn:hover { border-color: var(--border-strong); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background-color: #10233E;
+      border-color: #10233E;
+      color: #FFFFFF;
+    }
+    [data-theme="dark"] .btn-primary {
+      background-color: #2B5C9E;
+      border-color: #2B5C9E;
+    }
+
+    .btn-deal {
+      background-color: var(--deal);
+      border-color: var(--deal);
+      color: #FFFFFF;
+    }
+
+    .vehicle-pill {
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .vehicle-pill:hover { border-color: var(--cobalt); }
+
+    .vehicle-pill-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 175px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vehicle-pill-spec {
+      display: block;
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+
+    /* ==========================================================================
+       3. FILTER RIBBONS & AUTOCOMPLETE
+       ========================================================================== */
+    .ribbon {
+      background-color: var(--bg-canvas);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+
+    .ribbon-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ribbon-row + .ribbon-row {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background-color: var(--bg-surface);
+      color: var(--ink-soft);
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--cobalt); color: var(--ink); }
+    .chip.active {
+      background-color: #10233E;
+      border-color: #10233E;
+      color: #FFFFFF;
+    }
+    [data-theme="dark"] .chip.active {
+      background-color: #2B5C9E;
+      border-color: #2B5C9E;
+    }
+
+    .input {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      outline: none;
+    }
+    .input:focus { border-color: var(--cobalt); }
+
+    .ac-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .ac-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 245px;
+      max-width: 320px;
+      max-height: 240px;
+      overflow-y: auto;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      box-shadow: var(--shadow-md);
+      z-index: 50;
+      display: none;
+    }
+    .ac-menu.open { display: block; }
+    .ac-item {
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover { background-color: var(--cobalt-soft); }
+
+    .savings-banner {
+      background-color: var(--deal-soft);
+      border: 1px solid var(--deal);
+      color: var(--deal);
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       4. TWO-COLUMN MAIN WORKSPACE & STATION CARDS
+       ========================================================================== */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 465px 1fr;
+      gap: 16px;
+      padding: 14px 16px 28px;
+      max-width: 1440px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+
+    .list-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .station-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 230px);
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    @media (max-width: 980px) {
+      .station-scroll { max-height: none; }
+    }
+
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .card:hover { border-color: var(--border-strong); }
+    .card.is-best { border-left-color: var(--deal); }
+    .card.is-selected {
+      border-color: var(--cobalt);
+      border-left-width: 3px;
+      border-left-color: var(--cobalt);
+      background-color: var(--bg-elevated);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .rank-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: var(--bg-subtle);
+      color: var(--ink-soft);
+    }
+    .rank-tag.best {
+      background-color: var(--deal-soft);
+      color: var(--deal);
+    }
+
+    .station-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 4px 0 2px;
+    }
+
+    .station-meta {
+      font-size: 11px;
+      color: var(--ink-soft);
+    }
+
+    .price-block {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .pump-price {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .card.is-best .pump-price { color: var(--deal); }
+
+    .net-total {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cobalt);
+      margin-top: 3px;
+    }
+
+    .card-breakdown {
+      margin-top: 10px;
+      padding: 9px 10px;
+      border-radius: 5px;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      display: none;
+    }
+    .card-breakdown.open { display: block; }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .card-actions {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       5. INTERACTIVE CANVAS MAP + HTML OVERLAY PINS
+       ========================================================================== */
+    .map-panel {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 72px;
+    }
+
+    .map-viewport {
+      position: relative;
+      width: 100%;
+      height: 560px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      user-select: none;
+      touch-action: none;
+      cursor: grab;
+      background-color: #E8EEF5;
+    }
+    [data-theme="dark"] .map-viewport { background-color: #0F1824; }
+    .map-viewport:active { cursor: grabbing; }
+
+    @media (max-width: 980px) {
+      .map-panel { position: static; }
+      .map-viewport { height: 420px; }
+    }
+
+    #mapCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #mapPinLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .map-pin {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      pointer-events: auto;
+      border: 1.5px solid #FFFFFF;
+      background-color: #10233E;
+      color: #FFFFFF;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+      transition: transform 0.12s, background-color 0.12s;
+      z-index: 5;
+    }
+    .map-pin::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -5px;
+      transform: translateX(-50%);
+      border-width: 5px 5px 0 5px;
+      border-style: solid;
+      border-color: #10233E transparent transparent transparent;
+    }
+    .map-pin:hover {
+      transform: translate(-50%, -106%) scale(1.06);
+      z-index: 15;
+    }
+    .map-pin.best {
+      background-color: #16795C;
+      z-index: 10;
+    }
+    .map-pin.best::after {
+      border-top-color: #16795C;
+    }
+    .map-pin.selected {
+      background-color: #1D4ED8;
+      transform: translate(-50%, -106%) scale(1.08);
+      z-index: 20;
+    }
+    .map-pin.selected::after {
+      border-top-color: #1D4ED8;
+    }
+
+    .map-hud-top {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    .map-legend {
+      pointer-events: auto;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .map-controls {
+      pointer-events: auto;
+      display: flex;
+      gap: 4px;
+    }
+
+    .map-zoom-btn {
+      height: 30px;
+      min-width: 30px;
+      padding: 0 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-surface);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .map-zoom-btn:hover { border-color: var(--cobalt); }
+
+    /* ==========================================================================
+       6. FUEL LOG & MODALS
+       ========================================================================== */
+    .single-view {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .kpi-label { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+    .kpi-val { font-size: 24px; font-weight: 800; margin: 4px 0 2px; }
+    .kpi-sub { font-size: 11px; color: var(--ink-muted); }
+
+    .log-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .log-grid { grid-template-columns: 1fr; }
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      height: 150px;
+      padding-top: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-fill {
+      width: 100%;
+      max-width: 40px;
+      border-radius: 4px 4px 0 0;
+      background-color: var(--cobalt);
+      transition: height 0.25s ease;
+    }
+    .bar-fill.current { background-color: var(--deal); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background-color: rgba(10, 17, 28, 0.62);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-box {
+      width: 100%;
+      max-width: 680px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .garage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-right: 4px;
+    }
+
+    .garage-item {
+      border: 1px solid var(--border);
+      background-color: var(--bg-elevated);
+      border-radius: 6px;
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .garage-item:hover { border-color: var(--cobalt); }
+    .garage-item.selected {
+      border-color: var(--cobalt);
+      background-color: var(--cobalt-soft);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 80;
+      background-color: #10233E;
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      display: none;
+    }
+    .toast.show { display: block; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. TOP HEADER BAR
+       ======================================================================== -->
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand-group">
+        <div class="brand-icon">⛽</div>
+        <div>
+          <div class="brand-title-row">
+            <div class="brand-stack">
+              <span class="brand-title">cheapahhgas</span>
+              <span class="brand-beta mono">BETA · v0.9</span>
+            </div>
+            <span class="badge-aaa mono">AAA NOV '26</span>
+          </div>
+          <div id="headerSubtitle" class="brand-sub mono" style="margin-top:3px;">
+            📍 Dubuque, IA · Prom. estatal Iowa: $3.60/gal
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="seg-group" aria-label="Main views">
+        <button type="button" class="seg-btn active" data-action="set-view" data-view="local">
+          ⛽ <span data-i18n="tabLocal">Local / EV</span>
+        </button>
+        <button type="button" class="seg-btn" data-action="set-view" data-view="trip">
+          🛣️ <span data-i18n="tabTrip">Trip Planner</span>
+        </button>
+        <button type="button" class="seg-btn" data-action="set-view" data-view="log">
+          📒 <span data-i18n="tabLog">Fuel Log</span>
+          <span id="headerMonthBadge" class="badge-aaa mono">$0</span>
+        </button>
+      </nav>
+
+      <!-- Vehicle Pill + Theme + Language Toggle -->
+      <div class="header-actions">
+        <button type="button" class="vehicle-pill" data-action="open-garage">
+          <span id="hdrCarEmoji" style="font-size:17px;">🚙</span>
+          <div>
+            <span id="hdrCarName" class="vehicle-pill-name">2013 Jeep Grand Cherokee</span>
+            <span id="hdrCarSpec" class="vehicle-pill-spec mono">18 gal · 21 MPG</span>
+          </div>
+          <span class="mono" style="font-size:11px; color:var(--cobalt);">▾</span>
+        </button>
+
+        <button type="button" class="btn" data-action="toggle-theme">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">Noche</span>
+        </button>
+
+        <button type="button" id="langBtn" class="btn mono" data-action="toggle-lang">ES → EN</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2A. LOCAL / EV FILTER RIBBON (NATIONWIDE US SEARCH + COMMUTE MODE)
+       ======================================================================== -->
+  <section id="localRibbon" class="ribbon">
+    <div class="container">
+      <div class="ribbon-row">
+        <div class="chip-row">
+          <!-- Radius vs On-My-Route Switch -->
+          <div class="seg-group">
+            <button type="button" class="seg-btn active" data-action="set-scope" data-scope="radius">
+              📍 <span data-i18n="scopeRadius">Por Radio</span>
+            </button>
+            <button type="button" class="seg-btn" data-action="set-scope" data-scope="commute">
+              🛣️ <span data-i18n="scopeCommute">En Mi Ruta</span>
+            </button>
+          </div>
+
+          <!-- Nationwide City / State / 5-Digit ZIP Search -->
+          <div id="radiusControls" class="chip-row">
+            <div class="ac-wrap">
+              <input id="locationSearchInput" type="text" class="input" value="Dubuque, IA" placeholder="Ciudad, Estado o ZIP (ej. 75201, Dallas TX)..." autocomplete="off" style="width:225px;" />
+              <div id="locationAcMenu" class="ac-menu"></div>
+            </div>
+            <button type="button" class="btn btn-primary" data-action="search-location" data-i18n="goBtn">Buscar</button>
+            <button type="button" class="btn" data-action="use-gps">📡 <span data-i18n="gpsBtn">Mi GPS</span></button>
+            <button type="button" class="chip radius-chip" data-action="set-radius" data-r="2">2 mi</button>
+            <button type="button" class="chip radius-chip active" data-action="set-radius" data-r="5">5 mi</button>
+            <button type="button" class="chip radius-chip" data-action="set-radius" data-r="10">10 mi</button>
+            <button type="button" class="chip radius-chip" data-action="set-radius" data-r="15">15 mi</button>
+          </div>
+
+          <!-- Commute Corridor Controls -->
+          <div id="commuteControls" class="chip-row hidden">
+            <button type="button" class="chip commute-chip active" data-action="set-commute" data-commute="west_clarke" id="commuteChip0">Corredor Oeste → Norte</button>
+            <button type="button" class="chip commute-chip" data-action="set-commute" data-commute="dbq_kennedy" id="commuteChip1">Centro → Zona Comercial</button>
+            <button type="button" class="chip commute-chip" data-action="set-commute" data-commute="dbq_east" id="commuteChip2">Cruce Este / Puente</button>
+          </div>
+        </div>
+
+        <div id="savingsPill" class="savings-banner mono">
+          ▼ Ahorras hasta $3.96 llenando hoy
+        </div>
+      </div>
+
+      <!-- Quick Nationwide Cities Bar -->
+      <div class="ribbon-row" style="padding-top:6px; margin-top:6px; border-top:1px dashed var(--border);">
+        <div class="chip-row">
+          <span class="mono" style="font-size:10px; color:var(--ink-muted);" data-i18n="quickCitiesLbl">Ciudades rápidas:</span>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Dubuque, IA">Dubuque, IA</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Dallas, TX">Dallas, TX</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Chicago, IL">Chicago, IL</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Nashville, TN">Nashville, TN</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Orlando, FL">Orlando, FL</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Los Angeles, CA">Los Angeles, CA</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="Denver, CO">Denver, CO</button>
+          <button type="button" class="chip" data-action="pick-city" data-loc="New York, NY">New York, NY</button>
+        </div>
+      </div>
+
+      <!-- Fuel Grades, EV Mode, Tank/MPG Quick Adjusters & Sort -->
+      <div class="ribbon-row">
+        <div class="chip-row">
+          <button type="button" class="chip grade-chip active" data-action="set-grade" data-grade="regular">87 Reg</button>
+          <button type="button" class="chip grade-chip" data-action="set-grade" data-grade="midgrade">89 Mid</button>
+          <button type="button" class="chip grade-chip" data-action="set-grade" data-grade="premium">93 Prem</button>
+          <button type="button" class="chip grade-chip" data-action="set-grade" data-grade="diesel">Diesel</button>
+          <button type="button" class="chip grade-chip" data-action="set-grade" data-grade="e85">E85</button>
+          <button type="button" class="chip grade-chip" data-action="set-grade" data-grade="ev">⚡ EV Charge</button>
+
+          <span id="evSubFilters" class="chip-row hidden" style="margin-left:6px; padding-left:8px; border-left:1px solid var(--border);">
+            <button type="button" class="chip ev-chip active" data-action="set-ev-filter" data-ev="all">All EV</button>
+            <button type="button" class="chip ev-chip" data-action="set-ev-filter" data-ev="fast">150kW+</button>
+            <button type="button" class="chip ev-chip" data-action="set-ev-filter" data-ev="NACS">NACS</button>
+            <button type="button" class="chip ev-chip" data-action="set-ev-filter" data-ev="CCS1">CCS1</button>
+          </span>
+        </div>
+
+        <div class="chip-row">
+          <label class="mono" style="font-size:11px; color:var(--ink-soft);">
+            <span id="quickCapLabel">Tanque:</span>
+            <input id="quickCapInput" type="number" step="0.5" min="4" max="150" value="18" class="input mono" style="width:58px; padding:3px 6px;" />
+          </label>
+          <label class="mono" style="font-size:11px; color:var(--ink-soft);">
+            <span id="quickEffLabel">MPG:</span>
+            <input id="quickEffInput" type="number" step="0.5" min="1" max="120" value="21" class="input mono" style="width:54px; padding:3px 6px;" />
+          </label>
+
+          <button type="button" class="chip sort-chip active" data-action="set-sort" data-sort="net" data-i18n="sortNet">Costo Real $</button>
+          <button type="button" class="chip sort-chip" data-action="set-sort" data-sort="pump" data-i18n="sortPump">Precio Bomba</button>
+          <button type="button" class="chip sort-chip" data-action="set-sort" data-sort="dist" data-i18n="sortDist">Más Cercana</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       2B. NATIONWIDE TRIP PLANNER RIBBON
+       ======================================================================== -->
+  <section id="tripRibbon" class="ribbon hidden">
+    <div class="container">
+      <div class="ribbon-row">
+        <div class="chip-row">
+          <span class="badge-aaa mono">FROM</span>
+          <div class="ac-wrap">
+            <input id="tripFromInput" type="text" class="input" value="Dubuque, IA" placeholder="Origen (Ciudad o ZIP)" autocomplete="off" style="width:175px;" />
+            <div id="tripFromAcMenu" class="ac-menu"></div>
+          </div>
+          <span class="badge-aaa mono" style="background:var(--deal-soft); color:var(--deal);">TO</span>
+          <div class="ac-wrap">
+            <input id="tripToInput" type="text" class="input" value="Nashville, TN" placeholder="Destino (Ciudad o ZIP)" autocomplete="off" style="width:175px;" />
+            <div id="tripToAcMenu" class="ac-menu"></div>
+          </div>
+          <button type="button" class="btn btn-primary" data-action="calc-trip" data-i18n="calcTripBtn">Calcular ruta</button>
+        </div>
+
+        <div class="chip-row">
+          <button type="button" class="chip" data-action="trip-preset" data-from="Dubuque, IA" data-to="Nashville, TN">Dubuque → Nashville</button>
+          <button type="button" class="chip" data-action="trip-preset" data-from="Dallas, TX" data-to="Austin, TX">Dallas → Austin</button>
+          <button type="button" class="chip" data-action="trip-preset" data-from="Chicago, IL" data-to="Denver, CO">Chicago → Denver</button>
+          <button type="button" class="chip" data-action="trip-preset" data-from="Los Angeles, CA" data-to="Las Vegas, NV">LA → Las Vegas</button>
+          <button type="button" class="chip" data-action="trip-preset" data-from="Orlando, FL" data-to="Atlanta, GA">Orlando → Atlanta</button>
+        </div>
+      </div>
+
+      <div class="ribbon-row">
+        <div class="chip-row" style="gap:16px;">
+          <label style="font-size:12px; display:flex; align-items:center; gap:6px;">
+            <span style="color:var(--ink-soft);" data-i18n="startPctLbl">Tanque inicial:</span>
+            <input id="tripStartSlider" type="range" min="25" max="100" value="85" />
+            <strong id="tripStartVal" class="mono">85%</strong>
+          </label>
+          <label style="font-size:12px; display:flex; align-items:center; gap:6px;">
+            <span style="color:var(--ink-soft);" data-i18n="reservePctLbl">Reserva mín.:</span>
+            <input id="tripReserveSlider" type="range" min="10" max="35" value="15" />
+            <strong id="tripReserveVal" class="mono">15%</strong>
+          </label>
+        </div>
+
+        <div class="seg-group">
+          <button type="button" id="tripOneWayBtn" class="seg-btn active" data-action="set-trip-round" data-round="0" data-i18n="oneWay">Solo Ida</button>
+          <button type="button" id="tripRoundBtn" class="seg-btn" data-action="set-trip-round" data-round="1" data-i18n="roundTrip">Ida y Vuelta</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. TWO-COLUMN MAIN WORKSPACE (STATIONS / STOPS + INTERACTIVE MAP)
+       ======================================================================== -->
+  <main id="mapWorkspace" class="workspace-grid">
+    <!-- Left Column: Station or Pit-Stop Cards -->
+    <section class="list-column">
+      <div id="localListHeader" style="display:flex; justify-content:space-between; font-size:12px; padding:0 2px;">
+        <strong id="listCountLabel">8 estaciones encontradas</strong>
+        <span id="listAvgLabel" class="mono" style="color:var(--ink-soft);">Promedio: $3.60/gal</span>
+      </div>
+
+      <!-- Trip Summary Telemetry Card -->
+      <div id="tripSummaryCard" class="card is-best hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <span class="rank-tag best mono">CORRIDOR TELEMETRY</span>
+            <h2 id="tripHeadline" style="font-size:15px; font-weight:800; margin:4px 0 0;">Dubuque, IA → Nashville, TN</h2>
+          </div>
+          <span id="tripWayTag" class="badge-aaa mono">ONE-WAY</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px;">
+          <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:5px; padding:8px;">
+            <div style="font-size:10px; color:var(--ink-soft);" data-i18n="tripDist">Distancia</div>
+            <div id="tripDistVal" class="mono" style="font-size:14px; font-weight:800;">625 mi</div>
+            <div id="tripTimeVal" class="mono" style="font-size:10px; color:var(--ink-muted);">~9h 35m</div>
+          </div>
+          <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:5px; padding:8px;">
+            <div style="font-size:10px; color:var(--ink-soft);" data-i18n="tripBurn">Consumo</div>
+            <div id="tripBurnVal" class="mono" style="font-size:14px; font-weight:800;">29.8 gal</div>
+            <div id="tripStopsVal" class="mono" style="font-size:10px; color:var(--ink-muted);">2 paradas</div>
+          </div>
+          <div style="background:var(--deal-soft); border:1px solid var(--deal); border-radius:5px; padding:8px;">
+            <div style="font-size:10px; color:var(--deal);" data-i18n="tripCost">Gasto Total</div>
+            <div id="tripCostVal" class="mono" style="font-size:14px; font-weight:800; color:var(--deal);">$103.40</div>
+            <div id="tripSaveVal" class="mono" style="font-size:10px; color:var(--deal);">Ahorras $14.20</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards List -->
+      <div id="cardsContainer" class="station-scroll"></div>
+    </section>
+
+    <!-- Right Column: Interactive HTML5 Canvas Map + Clickable Overlay Pins -->
+    <section class="map-panel">
+      <div id="mapViewport" class="map-viewport">
+        <canvas id="mapCanvas"></canvas>
+        <div id="mapPinLayer"></div>
+
+        <div class="map-hud-top">
+          <div id="mapLegendText" class="map-legend">
+            ● Verde = Menor gasto real en bolsillo · Haz clic en un pin
+          </div>
+          <div class="map-controls">
+            <button type="button" class="map-zoom-btn" data-action="map-zoom-in" title="Acercar">+</button>
+            <button type="button" class="map-zoom-btn" data-action="map-zoom-out" title="Alejar">−</button>
+            <button type="button" class="map-zoom-btn" data-action="map-reset" style="font-size:11px;" data-i18n="recenter">Centrar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       4. FUEL LOG VIEW (STARTS AT $0.00 / EMPTY SO USER CAN ADD FROM SCRATCH)
+       ======================================================================== -->
+  <section id="logWorkspace" class="single-view hidden">
+    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+      <div>
+        <span class="badge-aaa mono">MONTHLY SPENDING &amp; REAL MPG</span>
+        <h1 style="font-size:20px; font-weight:800; margin:4px 0 0;" data-i18n="logHeading">Historial de Carga &amp; MPG Real</h1>
+      </div>
+      <button type="button" class="btn btn-primary" data-action="open-new-log">+ <span data-i18n="newFillUp">Registrar carga</span></button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="kpiMonth">Gasto este mes</div>
+        <div id="kpiMonthVal" class="kpi-val mono">$0.00</div>
+        <div id="kpiMonthSub" class="kpi-sub mono">0 cargas registradas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="kpiVol">Volumen acumulado</div>
+        <div id="kpiVolVal" class="kpi-val mono">0.0 gal</div>
+        <div id="kpiVolSub" class="kpi-sub mono">Total acumulado</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="kpiAvgRate">Precio promedio pagado</div>
+        <div id="kpiRateVal" class="kpi-val mono" style="color:var(--cobalt);">—</div>
+        <div id="kpiRateSub" class="kpi-sub mono">Sin cargas aún</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" data-i18n="kpiMpg">MPG Real Medido</div>
+        <div id="kpiMpgVal" class="kpi-val mono" style="color:var(--deal);">—</div>
+        <div id="kpiMpgSub" class="kpi-sub mono">vs. catálogo vehículo</div>
+      </div>
+    </div>
+
+    <div class="log-grid">
+      <div class="card">
+        <span class="badge-aaa mono">6-MONTH SPEND</span>
+        <h2 style="font-size:15px; font-weight:700; margin:6px 0 10px;" data-i18n="chartTitle">Gasto mensual en combustible</h2>
+        <div id="spendBarChart" class="bar-chart"></div>
+        <p style="font-size:11px; color:var(--ink-soft); margin:10px 0 0;" data-i18n="chartHint">
+          Usa el botón "+ Cargué aquí" en cualquier gasolinera o "+ Registrar carga" arriba para empezar desde cero.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h2 style="font-size:15px; font-weight:700; margin:0;" data-i18n="ledgerTitle">Registro de cargas</h2>
+          <span id="logEntryCount" class="mono" style="font-size:11px; color:var(--ink-soft);">0 entradas</span>
+        </div>
+        <div id="logLedgerContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       5. SMART VEHICLE GARAGE MODAL (92 CARS ACROSS 14 BRANDS)
+       ======================================================================== -->
+  <div id="garageModal" class="modal-backdrop" data-action="close-modal" data-modal="garageModal">
+    <div class="modal-box" data-stop-propagation="1">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--border);">
+        <div>
+          <span class="badge-aaa mono">SMART VEHICLE GARAGE · 92 MODELS</span>
+          <h3 style="font-size:17px; font-weight:800; margin:4px 0 2px;" data-i18n="garageTitle">Selecciona tu vehículo</h3>
+          <p style="font-size:12px; color:var(--ink-soft); margin:0;" data-i18n="garageSub">
+            Configura automáticamente la capacidad del tanque o batería y su rendimiento.
+          </p>
+        </div>
+        <button type="button" class="btn" data-action="close-modal" data-modal="garageModal">✕</button>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;">
+        <input id="garageSearch" type="text" class="input" placeholder="Buscar marca o modelo (Jeep, Camry, F-150, Tesla)..." style="flex:1; min-width:200px;" />
+        <div class="seg-group">
+          <button type="button" class="seg-btn garage-type active" data-action="set-garage-type" data-type="all">Todos</button>
+          <button type="button" class="seg-btn garage-type" data-action="set-garage-type" data-type="gas">Gas / Hybrid</button>
+          <button type="button" class="seg-btn garage-type" data-action="set-garage-type" data-type="ev">⚡ EV</button>
+        </div>
+      </div>
+
+      <div id="brandChipsContainer" class="chip-row" style="margin-top:10px;"></div>
+      <div id="garageGrid" class="garage-grid"></div>
+
+      <!-- Custom Vehicle Builder -->
+      <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
+        <div class="chip-row">
+          <strong style="font-size:12px;" data-i18n="customCarLbl">+ Auto personalizado:</strong>
+          <input id="customNameIn" type="text" class="input" placeholder="Nombre" value="Mi Auto" style="width:110px;" />
+          <input id="customCapIn" type="number" step="0.5" min="5" max="150" value="18" class="input mono" style="width:62px;" />
+          <span class="mono" style="font-size:11px;">gal/kWh</span>
+          <input id="customEffIn" type="number" step="0.5" min="1" max="120" value="21" class="input mono" style="width:58px;" />
+          <span class="mono" style="font-size:11px;">MPG</span>
+        </div>
+        <button type="button" class="btn btn-primary" data-action="apply-custom-car" data-i18n="applyBtn">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       6. REPORT PUMP PRICE MODAL
+       ======================================================================== -->
+  <div id="reportModal" class="modal-backdrop" data-action="close-modal" data-modal="reportModal">
+    <div class="modal-box" style="max-width:380px;" data-stop-propagation="1">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border);">
+        <div>
+          <span class="rank-tag best mono" data-i18n="reportBadge">ACTUALIZAR PRECIO</span>
+          <h3 id="reportTitle" style="font-size:16px; font-weight:800; margin:4px 0 0;">Station</h3>
+        </div>
+        <button type="button" class="btn" data-action="close-modal" data-modal="reportModal">✕</button>
+      </div>
+      <form id="reportForm" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+        <label style="font-size:12px; font-weight:600;">
+          <span id="reportLbl">Nuevo precio en bomba ($/gal)</span>
+          <input id="reportInput" type="number" step="0.01" min="0.05" max="15" required class="input mono" style="width:100%; font-size:16px; font-weight:700; margin-top:4px;" />
+        </label>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn" data-action="close-modal" data-modal="reportModal" data-i18n="cancelBtn">Cancelar</button>
+          <button type="submit" class="btn btn-deal" data-i18n="savePriceBtn">Guardar precio</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       7. LOG FILL-UP MODAL ("+ CARGUÉ AQUÍ" / "+ REGISTRAR CARGA")
+       ======================================================================== -->
+  <div id="logModal" class="modal-backdrop" data-action="close-modal" data-modal="logModal">
+    <div class="modal-box" style="max-width:440px;" data-stop-propagation="1">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border);">
+        <div>
+          <span class="rank-tag best mono" data-i18n="logBadge">REGISTRAR CARGA</span>
+          <h3 style="font-size:16px; font-weight:800; margin:4px 0 0;" data-i18n="logModalTitle">Guardar en Fuel Log</h3>
+        </div>
+        <button type="button" class="btn" data-action="close-modal" data-modal="logModal">✕</button>
+      </div>
+      <form id="logForm" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+        <label style="font-size:12px; font-weight:600;">
+          <span data-i18n="logStationLbl">Estación / Red</span>
+          <input id="logStationIn" type="text" required placeholder="Ej. Kwik Star #312" class="input" style="width:100%; margin-top:4px;" />
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <label style="font-size:11px; font-weight:600;">
+            <span id="logCapLbl">Galones</span>
+            <input id="logUnitsIn" type="number" step="0.1" min="0.5" max="200" required class="input mono" style="width:100%; margin-top:4px;" />
+          </label>
+          <label style="font-size:11px; font-weight:600;">
+            <span id="logPriceLbl">Precio ($/gal)</span>
+            <input id="logPriceIn" type="number" step="0.01" min="0.05" max="15" required class="input mono" style="width:100%; margin-top:4px;" />
+          </label>
+          <label style="font-size:11px; font-weight:600;">
+            <span data-i18n="logMilesLbl">Millas (opc.)</span>
+            <input id="logMilesIn" type="number" step="1" min="1" max="2000" placeholder="360" class="input mono" style="width:100%; margin-top:4px;" />
+          </label>
+        </div>
+        <div class="mono" style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:5px; padding:8px 10px; font-size:12px; display:flex; justify-content:space-between;">
+          <span>Total: <strong id="logTotalPreview">$0.00</strong></span>
+          <span id="logMpgPreview" style="color:var(--deal);">MPG: —</span>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn" data-action="close-modal" data-modal="logModal" data-i18n="cancelBtn">Cancelar</button>
+          <button type="submit" class="btn btn-primary" data-i18n="saveBtn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ========================================================================
+       8. CLEAN, SELF-CONTAINED APPLICATION ENGINE (ZERO SYNTAX ERRORS)
+       ======================================================================== -->
+  <script>
+    (function () {
+      "use strict";
+
+      /* ----------------------------------------------------------------------
+         A. ALL 50 US STATES + DC AAA NOV '26 FUEL BASELINES & REGIONAL CHAINS
+         ---------------------------------------------------------------------- */
+      const STATE_DATA = {
+        AL: { name: "Alabama", reg: 3.24, diesel: 4.58, e85: 2.68, ev: 0.32, chains: ["Buc-ee's", "RaceTrac", "Murphy USA", "Chevron", "Shell", "Circle K", "Love's"] },
+        AK: { name: "Alaska", reg: 4.18, diesel: 4.79, e85: 3.45, ev: 0.39, chains: ["Holiday", "Chevron", "Fred Meyer Fuel", "Tesoro", "Safeway Fuel"] },
+        AZ: { name: "Arizona", reg: 3.74, diesel: 4.82, e85: 3.04, ev: 0.36, chains: ["QuikTrip", "Costco Fuel", "Circle K", "Chevron", "Shell", "ARCO", "Fry's Fuel"] },
+        AR: { name: "Arkansas", reg: 3.22, diesel: 4.55, e85: 2.66, ev: 0.31, chains: ["Murphy USA", "Casey's", "Kum & Go", "Love's", "Valero", "Shell"] },
+        CA: { name: "California", reg: 4.89, diesel: 5.54, e85: 3.78, ev: 0.46, chains: ["Costco Fuel", "ARCO", "Chevron", "Shell", "76", "Mobil", "Sam's Club"] },
+        CO: { name: "Colorado", reg: 3.48, diesel: 4.72, e85: 2.84, ev: 0.34, chains: ["King Soopers Fuel", "Maverik", "Costco Fuel", "Kum & Go", "Shell", "Conoco"] },
+        CT: { name: "Connecticut", reg: 3.59, diesel: 4.96, e85: 2.98, ev: 0.39, chains: ["Costco Fuel", "Cumberland Farms", "Mobil", "Shell", "Sunoco", "BJ's Gas"] },
+        DE: { name: "Delaware", reg: 3.39, diesel: 4.78, e85: 2.82, ev: 0.35, chains: ["Wawa", "Royal Farms", "Costco Fuel", "Sunoco", "Shell", "Exxon"] },
+        DC: { name: "District of Columbia", reg: 3.68, diesel: 5.02, e85: 3.05, ev: 0.38, chains: ["Exxon", "Shell", "Sunoco", "BP", "Liberty"] },
+        FL: { name: "Florida", reg: 3.38, diesel: 4.74, e85: 2.79, ev: 0.34, chains: ["Wawa", "RaceTrac", "Costco Fuel", "Murphy USA", "Circle K", "Shell", "Chevron"] },
+        GA: { name: "Georgia", reg: 3.31, diesel: 4.68, e85: 2.74, ev: 0.33, chains: ["QuikTrip", "RaceTrac", "Buc-ee's", "Kroger Fuel", "Costco Fuel", "Chevron", "Shell"] },
+        HI: { name: "Hawaii", reg: 4.76, diesel: 5.48, e85: 3.85, ev: 0.48, chains: ["Costco Fuel", "Safeway Fuel", "76", "Shell", "Hele", "Texaco"] },
+        ID: { name: "Idaho", reg: 3.62, diesel: 4.84, e85: 2.95, ev: 0.33, chains: ["Maverik", "Costco Fuel", "Stinker", "Chevron", "Sinclair", "Shell"] },
+        IL: { name: "Illinois", reg: 4.12, diesel: 5.18, e85: 3.30, ev: 0.38, chains: ["Costco Fuel", "Thorntons", "Casey's", "BP", "Shell", "Mobil", "Marathon"] },
+        IN: { name: "Indiana", reg: 3.56, diesel: 4.86, e85: 2.88, ev: 0.34, chains: ["Costco Fuel", "Meijer Express", "Speedway", "Casey's", "Thorntons", "BP", "Shell"] },
+        IA: { name: "Iowa", reg: 3.60, diesel: 4.92, e85: 2.86, ev: 0.33, chains: ["Kwik Star", "Murphy USA", "Casey's", "Hy-Vee Fast & Fresh", "BP", "Shell", "Sinclair"] },
+        KS: { name: "Kansas", reg: 3.29, diesel: 4.62, e85: 2.70, ev: 0.32, chains: ["QuikTrip", "Casey's", "Dillons Fuel", "Murphy USA", "Phillips 66", "Love's"] },
+        KY: { name: "Kentucky", reg: 3.44, diesel: 4.74, e85: 2.82, ev: 0.33, chains: ["Buc-ee's", "Kroger Fuel", "Thorntons", "Murphy USA", "Speedway", "Shell", "Love's"] },
+        LA: { name: "Louisiana", reg: 3.21, diesel: 4.54, e85: 2.65, ev: 0.31, chains: ["RaceTrac", "Murphy USA", "Circle K", "Exxon", "Chevron", "Shell", "Love's"] },
+        ME: { name: "Maine", reg: 3.54, diesel: 4.92, e85: 2.94, ev: 0.37, chains: ["Irving", "Cumberland Farms", "Circle K", "Mobil", "Sunoco", "BJ's Gas"] },
+        MD: { name: "Maryland", reg: 3.49, diesel: 4.85, e85: 2.88, ev: 0.36, chains: ["Wawa", "Royal Farms", "Costco Fuel", "Sheetz", "Exxon", "Shell", "Sunoco"] },
+        MA: { name: "Massachusetts", reg: 3.56, diesel: 4.95, e85: 2.96, ev: 0.39, chains: ["Cumberland Farms", "Costco Fuel", "Mobil", "Shell", "Sunoco", "Gulf", "BJ's Gas"] },
+        MI: { name: "Michigan", reg: 3.62, diesel: 4.94, e85: 2.90, ev: 0.35, chains: ["Costco Fuel", "Meijer Express", "Speedway", "Marathon", "Mobil", "Shell", "BP"] },
+        MN: { name: "Minnesota", reg: 3.48, diesel: 4.80, e85: 2.80, ev: 0.33, chains: ["Kwik Trip", "Costco Fuel", "Holiday", "Casey's", "Marathon", "BP", "Sinclair"] },
+        MS: { name: "Mississippi", reg: 3.18, diesel: 4.50, e85: 2.62, ev: 0.31, chains: ["Murphy USA", "Love's", "Circle K", "Chevron", "Shell", "Exxon", "Pilot"] },
+        MO: { name: "Missouri", reg: 3.34, diesel: 4.66, e85: 2.74, ev: 0.32, chains: ["QuikTrip", "Casey's", "Costco Fuel", "Hy-Vee Fuel", "Phillips 66", "Love's", "Sinclair"] },
+        MT: { name: "Montana", reg: 3.55, diesel: 4.78, e85: 2.90, ev: 0.33, chains: ["Town Pump", "Maverik", "Costco Fuel", "Sinclair", "Conoco", "Exxon"] },
+        NE: { name: "Nebraska", reg: 3.42, diesel: 4.74, e85: 2.78, ev: 0.32, chains: ["Casey's", "Kwik Shop", "Costco Fuel", "Hy-Vee Fuel", "Phillips 66", "Sinclair"] },
+        NV: { name: "Nevada", reg: 4.14, diesel: 4.98, e85: 3.32, ev: 0.37, chains: ["Costco Fuel", "Maverik", "Terrible's", "ARCO", "Chevron", "Shell", "Sinclair"] },
+        NH: { name: "New Hampshire", reg: 3.46, diesel: 4.86, e85: 2.88, ev: 0.37, chains: ["Irving", "Cumberland Farms", "Costco Fuel", "Mobil", "Shell", "Sunoco"] },
+        NJ: { name: "New Jersey", reg: 3.44, diesel: 4.84, e85: 2.86, ev: 0.36, chains: ["Wawa", "Costco Fuel", "QuickChek", "Exxon", "Shell", "Sunoco", "Mobil"] },
+        NM: { name: "New Mexico", reg: 3.36, diesel: 4.68, e85: 2.76, ev: 0.33, chains: ["Allsup's", "Maverik", "Costco Fuel", "Circle K", "Chevron", "Shell", "Love's"] },
+        NY: { name: "New York", reg: 3.69, diesel: 5.08, e85: 3.04, ev: 0.40, chains: ["Costco Fuel", "Stewart's Shops", "Speedway", "Mobil", "Shell", "Sunoco", "Exxon"] },
+        NC: { name: "North Carolina", reg: 3.36, diesel: 4.72, e85: 2.78, ev: 0.33, chains: ["Sheetz", "QuikTrip", "Costco Fuel", "Harris Teeter Fuel", "Circle K", "Exxon", "Shell"] },
+        ND: { name: "North Dakota", reg: 3.44, diesel: 4.76, e85: 2.80, ev: 0.32, chains: ["Casey's", "Holiday", "Simonson", "Cenex", "Sinclair", "Love's"] },
+        OH: { name: "Ohio", reg: 3.48, diesel: 4.82, e85: 2.84, ev: 0.34, chains: ["Sheetz", "GetGo", "Costco Fuel", "Kroger Fuel", "Speedway", "Marathon", "Shell"] },
+        OK: { name: "Oklahoma", reg: 3.19, diesel: 4.52, e85: 2.62, ev: 0.31, chains: ["QuikTrip", "OnCue", "Love's", "Casey's", "Murphy USA", "Phillips 66", "Shell"] },
+        OR: { name: "Oregon", reg: 4.08, diesel: 4.96, e85: 3.28, ev: 0.36, chains: ["Costco Fuel", "Fred Meyer Fuel", "ARCO", "Chevron", "Shell", "76", "Safeway Fuel"] },
+        PA: { name: "Pennsylvania", reg: 3.68, diesel: 5.04, e85: 3.02, ev: 0.37, chains: ["Sheetz", "Wawa", "GetGo", "Costco Fuel", "Sunoco", "Exxon", "Shell"] },
+        RI: { name: "Rhode Island", reg: 3.52, diesel: 4.90, e85: 2.92, ev: 0.38, chains: ["Cumberland Farms", "Mobil", "Shell", "Sunoco", "Gulf", "BJ's Gas"] },
+        SC: { name: "South Carolina", reg: 3.26, diesel: 4.62, e85: 2.70, ev: 0.32, chains: ["QuikTrip", "Buc-ee's", "Spinx", "Costco Fuel", "Circle K", "Exxon", "Shell"] },
+        SD: { name: "South Dakota", reg: 3.46, diesel: 4.78, e85: 2.82, ev: 0.32, chains: ["Kwik Star", "Casey's", "Costco Fuel", "Holiday", "Sinclair", "Love's"] },
+        TN: { name: "Tennessee", reg: 3.34, diesel: 4.68, e85: 2.76, ev: 0.32, chains: ["Buc-ee's", "Kroger Fuel", "Costco Fuel", "Murphy USA", "Pilot", "Shell", "Exxon"] },
+        TX: { name: "Texas", reg: 3.16, diesel: 4.48, e85: 2.60, ev: 0.31, chains: ["Buc-ee's", "H-E-B Fuel", "QuikTrip", "Costco Fuel", "RaceTrac", "Murphy USA", "Chevron", "Shell"] },
+        UT: { name: "Utah", reg: 3.64, diesel: 4.82, e85: 2.96, ev: 0.33, chains: ["Maverik", "Costco Fuel", "Smith's Fuel", "Sinclair", "Chevron", "Shell"] },
+        VT: { name: "Vermont", reg: 3.58, diesel: 4.94, e85: 2.96, ev: 0.38, chains: ["Maplefields", "Cumberland Farms", "Irving", "Mobil", "Sunoco", "Shell"] },
+        VA: { name: "Virginia", reg: 3.40, diesel: 4.76, e85: 2.80, ev: 0.34, chains: ["Wawa", "Sheetz", "Costco Fuel", "Royal Farms", "Exxon", "Shell", "Kroger Fuel"] },
+        WA: { name: "Washington", reg: 4.34, diesel: 5.18, e85: 3.46, ev: 0.38, chains: ["Costco Fuel", "Safeway Fuel", "ARCO", "Chevron", "Shell", "76", "Fred Meyer Fuel"] },
+        WV: { name: "West Virginia", reg: 3.46, diesel: 4.82, e85: 2.84, ev: 0.34, chains: ["Sheetz", "GoMart", "Kroger Fuel", "Marathon", "Exxon", "Shell"] },
+        WI: { name: "Wisconsin", reg: 3.52, diesel: 4.84, e85: 2.84, ev: 0.33, chains: ["Kwik Trip", "Woodman's Fuel", "Costco Fuel", "Casey's", "BP", "Mobil", "Shell"] },
+        WY: { name: "Wyoming", reg: 3.54, diesel: 4.80, e85: 2.90, ev: 0.33, chains: ["Maverik", "Sinclair", "Love's", "Flying J", "Conoco", "Shell"] }
+      };
+
+      /* ----------------------------------------------------------------------
+         B. NATIONWIDE 135+ US CITIES + 5-DIGIT ZIP RESOLVER
+         ---------------------------------------------------------------------- */
+      const US_CITIES = [
+        { city: "Dubuque", state: "IA", zip: "52001", lat: 42.4958, lon: -90.7010, water: "MISSISSIPPI RIVER", hwys: ["US-20", "US-61", "JFK RD"] },
+        { city: "East Dubuque", state: "IL", zip: "61025", lat: 42.4918, lon: -90.6435, water: "MISSISSIPPI RIVER", hwys: ["US-20", "IL-35", "SINSINAWA"] },
+        { city: "Galena", state: "IL", zip: "61036", lat: 42.4167, lon: -90.4290, water: "GALENA RIVER", hwys: ["US-20", "IL-84", "MAIN ST"] },
+        { city: "Des Moines", state: "IA", zip: "50309", lat: 41.5868, lon: -93.6250, water: "DES MOINES RIVER", hwys: ["I-235", "I-80", "I-35"] },
+        { city: "Cedar Rapids", state: "IA", zip: "52401", lat: 41.9779, lon: -91.6656, water: "CEDAR RIVER", hwys: ["I-380", "US-30", "1ST AVE"] },
+        { city: "Iowa City", state: "IA", zip: "52240", lat: 41.6611, lon: -91.5302, water: "IOWA RIVER", hwys: ["I-80", "US-218", "HWY 6"] },
+        { city: "Davenport", state: "IA", zip: "52801", lat: 41.5236, lon: -90.5776, water: "MISSISSIPPI RIVER", hwys: ["I-74", "I-80", "US-61"] },
+        { city: "Waterloo", state: "IA", zip: "50701", lat: 42.4928, lon: -92.3426, water: "CEDAR RIVER", hwys: ["US-20", "I-380", "US-63"] },
+        { city: "Sioux City", state: "IA", zip: "51101", lat: 42.4963, lon: -96.4049, water: "MISSOURI RIVER", hwys: ["I-29", "US-20", "US-75"] },
+        { city: "Ames", state: "IA", zip: "50010", lat: 42.0308, lon: -93.6319, water: "SKUNK RIVER", hwys: ["I-35", "US-30", "US-69"] },
+        { city: "Chicago", state: "IL", zip: "60601", lat: 41.8781, lon: -87.6298, water: "LAKE MICHIGAN", hwys: ["I-90", "I-290", "I-55"] },
+        { city: "Naperville", state: "IL", zip: "60540", lat: 41.7508, lon: -88.1535, water: "DUPAGE RIVER", hwys: ["I-88", "US-34", "IL-59"] },
+        { city: "Rockford", state: "IL", zip: "61101", lat: 42.2711, lon: -89.0940, water: "ROCK RIVER", hwys: ["I-90", "I-39", "US-20"] },
+        { city: "Springfield", state: "IL", zip: "62701", lat: 39.7817, lon: -89.6501, water: "LAKE SPRINGFIELD", hwys: ["I-55", "I-72", "US-36"] },
+        { city: "Madison", state: "WI", zip: "53703", lat: 43.0731, lon: -89.4012, water: "LAKE MENDOTA", hwys: ["US-12", "US-151", "I-90"] },
+        { city: "Milwaukee", state: "WI", zip: "53202", lat: 43.0389, lon: -87.9065, water: "LAKE MICHIGAN", hwys: ["I-94", "I-43", "I-794"] },
+        { city: "Green Bay", state: "WI", zip: "54301", lat: 44.5133, lon: -88.0133, water: "FOX RIVER", hwys: ["I-41", "I-43", "WI-172"] },
+        { city: "Platteville", state: "WI", zip: "53818", lat: 42.7342, lon: -90.4785, water: "ROUNTREE", hwys: ["US-151", "WI-80", "WI-81"] },
+        { city: "Minneapolis", state: "MN", zip: "55401", lat: 44.9778, lon: -93.2650, water: "MISSISSIPPI RIVER", hwys: ["I-35W", "I-94", "I-394"] },
+        { city: "St. Paul", state: "MN", zip: "55101", lat: 44.9537, lon: -93.0900, water: "MISSISSIPPI RIVER", hwys: ["I-94", "I-35E", "US-52"] },
+        { city: "Rochester", state: "MN", zip: "55901", lat: 44.0121, lon: -92.4802, water: "ZUMBRO RIVER", hwys: ["US-52", "US-63", "US-14"] },
+        { city: "Detroit", state: "MI", zip: "48226", lat: 42.3314, lon: -83.0458, water: "DETROIT RIVER", hwys: ["I-75", "I-94", "I-96"] },
+        { city: "Grand Rapids", state: "MI", zip: "49503", lat: 42.9634, lon: -85.6681, water: "GRAND RIVER", hwys: ["I-196", "US-131", "I-96"] },
+        { city: "Ann Arbor", state: "MI", zip: "48104", lat: 42.2808, lon: -83.7430, water: "HURON RIVER", hwys: ["I-94", "US-23", "M-14"] },
+        { city: "Indianapolis", state: "IN", zip: "46204", lat: 39.7684, lon: -86.1581, water: "WHITE RIVER", hwys: ["I-65", "I-70", "I-465"] },
+        { city: "Fort Wayne", state: "IN", zip: "46802", lat: 41.0793, lon: -85.1394, water: "MAUMEE RIVER", hwys: ["I-69", "US-30", "US-24"] },
+        { city: "Columbus", state: "OH", zip: "43215", lat: 39.9612, lon: -82.9988, water: "SCIOTO RIVER", hwys: ["I-70", "I-71", "I-270"] },
+        { city: "Cleveland", state: "OH", zip: "44114", lat: 41.4993, lon: -81.6944, water: "LAKE ERIE", hwys: ["I-90", "I-71", "I-77"] },
+        { city: "Cincinnati", state: "OH", zip: "45202", lat: 39.1031, lon: -84.5120, water: "OHIO RIVER", hwys: ["I-75", "I-71", "I-275"] },
+        { city: "Kansas City", state: "MO", zip: "64106", lat: 39.0997, lon: -94.5786, water: "MISSOURI RIVER", hwys: ["I-70", "I-35", "I-435"] },
+        { city: "St. Louis", state: "MO", zip: "63101", lat: 38.6270, lon: -90.1994, water: "MISSISSIPPI RIVER", hwys: ["I-64", "I-70", "I-44"] },
+        { city: "Springfield", state: "MO", zip: "65806", lat: 37.2090, lon: -93.2923, water: "JAMES RIVER", hwys: ["I-44", "US-65", "US-60"] },
+        { city: "Omaha", state: "NE", zip: "68102", lat: 41.2565, lon: -95.9345, water: "MISSOURI RIVER", hwys: ["I-80", "I-480", "US-75"] },
+        { city: "Lincoln", state: "NE", zip: "68508", lat: 40.8136, lon: -96.7026, water: "SALT CREEK", hwys: ["I-80", "US-77", "US-34"] },
+        { city: "Wichita", state: "KS", zip: "67202", lat: 37.6872, lon: -97.3301, water: "ARKANSAS RIVER", hwys: ["I-135", "I-235", "US-54"] },
+        { city: "Overland Park", state: "KS", zip: "66212", lat: 38.9822, lon: -94.6708, water: "INDIAN CREEK", hwys: ["I-435", "US-69", "I-35"] },
+        { city: "Sioux Falls", state: "SD", zip: "57104", lat: 43.5460, lon: -96.7313, water: "BIG SIOUX RIVER", hwys: ["I-29", "I-229", "I-90"] },
+        { city: "Fargo", state: "ND", zip: "58102", lat: 46.8772, lon: -96.7898, water: "RED RIVER", hwys: ["I-94", "I-29", "US-10"] },
+        { city: "Dallas", state: "TX", zip: "75201", lat: 32.7767, lon: -96.7970, water: "TRINITY RIVER", hwys: ["I-35E", "I-30", "US-75"] },
+        { city: "Fort Worth", state: "TX", zip: "76102", lat: 32.7555, lon: -97.3308, water: "TRINITY RIVER", hwys: ["I-35W", "I-30", "I-20"] },
+        { city: "Mansfield", state: "TX", zip: "76063", lat: 32.5632, lon: -97.1417, water: "JOE POOL LAKE", hwys: ["US-287", "TX-360", "I-20"] },
+        { city: "Arlington", state: "TX", zip: "76010", lat: 32.7357, lon: -97.1081, water: "LAKE ARLINGTON", hwys: ["I-30", "I-20", "TX-360"] },
+        { city: "Houston", state: "TX", zip: "77002", lat: 29.7604, lon: -95.3698, water: "BUFFALO BAYOU", hwys: ["I-45", "I-10", "US-59"] },
+        { city: "Austin", state: "TX", zip: "78701", lat: 30.2672, lon: -97.7431, water: "COLORADO RIVER", hwys: ["I-35", "MOPAC", "US-183"] },
+        { city: "San Antonio", state: "TX", zip: "78205", lat: 29.4241, lon: -98.4936, water: "SAN ANTONIO RIVER", hwys: ["I-10", "I-35", "I-410"] },
+        { city: "El Paso", state: "TX", zip: "79901", lat: 31.7619, lon: -106.4850, water: "RIO GRANDE", hwys: ["I-10", "US-54", "LOOP 375"] },
+        { city: "Nashville", state: "TN", zip: "37201", lat: 36.1627, lon: -86.7816, water: "CUMBERLAND RIVER", hwys: ["I-24", "I-40", "I-65"] },
+        { city: "Memphis", state: "TN", zip: "38103", lat: 35.1495, lon: -90.0490, water: "MISSISSIPPI RIVER", hwys: ["I-40", "I-55", "I-240"] },
+        { city: "Knoxville", state: "TN", zip: "37902", lat: 35.9606, lon: -83.9207, water: "TENNESSEE RIVER", hwys: ["I-40", "I-75", "I-275"] },
+        { city: "Chattanooga", state: "TN", zip: "37402", lat: 35.0456, lon: -85.3097, water: "TENNESSEE RIVER", hwys: ["I-24", "I-75", "US-27"] },
+        { city: "Louisville", state: "KY", zip: "40202", lat: 38.2527, lon: -85.7585, water: "OHIO RIVER", hwys: ["I-65", "I-64", "I-71"] },
+        { city: "Lexington", state: "KY", zip: "40507", lat: 38.0406, lon: -84.5037, water: "KENTUCKY RIVER", hwys: ["I-75", "I-64", "NEW CIRCLE"] },
+        { city: "Paducah", state: "KY", zip: "42001", lat: 37.0834, lon: -88.6000, water: "OHIO RIVER", hwys: ["I-24", "US-60", "US-45"] },
+        { city: "Atlanta", state: "GA", zip: "30303", lat: 33.7490, lon: -84.3880, water: "CHATTAHOOCHEE", hwys: ["I-75", "I-85", "I-285"] },
+        { city: "Savannah", state: "GA", zip: "31401", lat: 32.0809, lon: -81.0912, water: "SAVANNAH RIVER", hwys: ["I-16", "I-95", "US-17"] },
+        { city: "Miami", state: "FL", zip: "33130", lat: 25.7617, lon: -80.1918, water: "BISCAYNE BAY", hwys: ["I-95", "I-195", "US-1"] },
+        { city: "Orlando", state: "FL", zip: "32801", lat: 28.5383, lon: -81.3792, water: "LAKE EOLA", hwys: ["I-4", "FL-408", "FL-528"] },
+        { city: "Tampa", state: "FL", zip: "33602", lat: 27.9506, lon: -82.4572, water: "TAMPA BAY", hwys: ["I-275", "I-4", "US-41"] },
+        { city: "Jacksonville", state: "FL", zip: "32202", lat: 30.3322, lon: -81.6557, water: "ST. JOHNS RIVER", hwys: ["I-95", "I-10", "I-295"] },
+        { city: "Charlotte", state: "NC", zip: "28202", lat: 35.2271, lon: -80.8431, water: "CATAWBA RIVER", hwys: ["I-77", "I-85", "I-485"] },
+        { city: "Raleigh", state: "NC", zip: "27601", lat: 35.7796, lon: -78.6382, water: "NEUSE RIVER", hwys: ["I-40", "I-440", "US-1"] },
+        { city: "Charleston", state: "SC", zip: "29401", lat: 32.7765, lon: -79.9311, water: "ASHLEY RIVER", hwys: ["I-26", "US-17", "I-526"] },
+        { city: "Columbia", state: "SC", zip: "29201", lat: 34.0007, lon: -81.0348, water: "CONGAREE RIVER", hwys: ["I-26", "I-20", "I-77"] },
+        { city: "Richmond", state: "VA", zip: "23219", lat: 37.5407, lon: -77.4360, water: "JAMES RIVER", hwys: ["I-95", "I-64", "I-195"] },
+        { city: "Virginia Beach", state: "VA", zip: "23451", lat: 36.8529, lon: -75.9780, water: "ATLANTIC OCEAN", hwys: ["I-264", "I-64", "US-58"] },
+        { city: "Birmingham", state: "AL", zip: "35203", lat: 33.5186, lon: -86.8104, water: "CAHABA RIVER", hwys: ["I-65", "I-20", "I-59"] },
+        { city: "Huntsville", state: "AL", zip: "35801", lat: 34.7304, lon: -86.5861, water: "TENNESSEE RIVER", hwys: ["I-565", "US-72", "US-231"] },
+        { city: "Jackson", state: "MS", zip: "39201", lat: 32.2988, lon: -90.1848, water: "PEARL RIVER", hwys: ["I-55", "I-20", "I-220"] },
+        { city: "New Orleans", state: "LA", zip: "70112", lat: 29.9511, lon: -90.0715, water: "MISSISSIPPI RIVER", hwys: ["I-10", "I-610", "US-90"] },
+        { city: "Baton Rouge", state: "LA", zip: "70801", lat: 30.4515, lon: -91.1871, water: "MISSISSIPPI RIVER", hwys: ["I-10", "I-12", "I-110"] },
+        { city: "Little Rock", state: "AR", zip: "72201", lat: 34.7465, lon: -92.2896, water: "ARKANSAS RIVER", hwys: ["I-30", "I-40", "I-630"] },
+        { city: "Oklahoma City", state: "OK", zip: "73102", lat: 35.4676, lon: -97.5164, water: "OKLAHOMA RIVER", hwys: ["I-35", "I-40", "I-44"] },
+        { city: "Tulsa", state: "OK", zip: "74103", lat: 36.1540, lon: -95.9928, water: "ARKANSAS RIVER", hwys: ["I-44", "I-244", "US-75"] },
+        { city: "New York", state: "NY", zip: "10001", lat: 40.7128, lon: -74.0060, water: "HUDSON RIVER", hwys: ["I-95", "I-278", "FDR DR"] },
+        { city: "Buffalo", state: "NY", zip: "14202", lat: 42.8864, lon: -78.8784, water: "LAKE ERIE", hwys: ["I-90", "I-190", "NY-33"] },
+        { city: "Albany", state: "NY", zip: "12207", lat: 42.6526, lon: -73.7562, water: "HUDSON RIVER", hwys: ["I-87", "I-90", "I-787"] },
+        { city: "Newark", state: "NJ", zip: "07102", lat: 40.7357, lon: -74.1724, water: "PASSAIC RIVER", hwys: ["I-95", "I-78", "US-1"] },
+        { city: "Jersey City", state: "NJ", zip: "07302", lat: 40.7178, lon: -74.0431, water: "HUDSON RIVER", hwys: ["I-78", "US-1", "NJ-440"] },
+        { city: "Philadelphia", state: "PA", zip: "19102", lat: 39.9526, lon: -75.1652, water: "DELAWARE RIVER", hwys: ["I-95", "I-76", "I-676"] },
+        { city: "Pittsburgh", state: "PA", zip: "15222", lat: 40.4406, lon: -79.9959, water: "ALLEGHENY RIVER", hwys: ["I-376", "I-279", "I-79"] },
+        { city: "Boston", state: "MA", zip: "02108", lat: 42.3601, lon: -71.0589, water: "CHARLES RIVER", hwys: ["I-93", "I-90", "US-1"] },
+        { city: "Hartford", state: "CT", zip: "06103", lat: 41.7658, lon: -72.6734, water: "CONNECTICUT RIVER", hwys: ["I-84", "I-91", "US-44"] },
+        { city: "Providence", state: "RI", zip: "02903", lat: 41.8240, lon: -71.4128, water: "PROVIDENCE RIVER", hwys: ["I-95", "I-195", "US-6"] },
+        { city: "Manchester", state: "NH", zip: "03101", lat: 42.9956, lon: -71.4548, water: "MERRIMACK RIVER", hwys: ["I-93", "I-293", "US-3"] },
+        { city: "Burlington", state: "VT", zip: "05401", lat: 44.4759, lon: -73.2121, water: "LAKE CHAMPLAIN", hwys: ["I-89", "US-7", "VT-127"] },
+        { city: "Portland", state: "ME", zip: "04101", lat: 43.6591, lon: -70.2568, water: "CASCO BAY", hwys: ["I-295", "I-95", "US-1"] },
+        { city: "Baltimore", state: "MD", zip: "21202", lat: 39.2904, lon: -76.6122, water: "PATAPSCO RIVER", hwys: ["I-95", "I-83", "I-695"] },
+        { city: "Wilmington", state: "DE", zip: "19801", lat: 39.7391, lon: -75.5398, water: "DELAWARE RIVER", hwys: ["I-95", "I-495", "US-13"] },
+        { city: "Washington", state: "DC", zip: "20001", lat: 38.9072, lon: -77.0369, water: "POTOMAC RIVER", hwys: ["I-395", "I-66", "US-50"] },
+        { city: "Charleston", state: "WV", zip: "25301", lat: 38.3498, lon: -81.6326, water: "KANAWHA RIVER", hwys: ["I-64", "I-77", "I-79"] },
+        { city: "Los Angeles", state: "CA", zip: "90012", lat: 34.0522, lon: -118.2437, water: "LA RIVER", hwys: ["I-10", "I-110", "US-101"] },
+        { city: "San Francisco", state: "CA", zip: "94102", lat: 37.7749, lon: -122.4194, water: "SF BAY", hwys: ["I-80", "US-101", "I-280"] },
+        { city: "San Diego", state: "CA", zip: "92101", lat: 32.7157, lon: -117.1611, water: "SAN DIEGO BAY", hwys: ["I-5", "I-8", "I-15"] },
+        { city: "San Jose", state: "CA", zip: "95113", lat: 37.3382, lon: -121.8863, water: "GUADALUPE RIVER", hwys: ["I-280", "US-101", "I-880"] },
+        { city: "Sacramento", state: "CA", zip: "95814", lat: 38.5816, lon: -121.4944, water: "SACRAMENTO RIVER", hwys: ["I-5", "I-80", "US-50"] },
+        { city: "Seattle", state: "WA", zip: "98101", lat: 47.6062, lon: -122.3321, water: "PUGET SOUND", hwys: ["I-5", "I-90", "WA-99"] },
+        { city: "Spokane", state: "WA", zip: "99201", lat: 47.6588, lon: -117.4260, water: "SPOKANE RIVER", hwys: ["I-90", "US-2", "US-395"] },
+        { city: "Portland", state: "OR", zip: "97204", lat: 45.5152, lon: -122.6784, water: "WILLAMETTE RIVER", hwys: ["I-5", "I-84", "I-405"] },
+        { city: "Las Vegas", state: "NV", zip: "89101", lat: 36.1699, lon: -115.1398, water: "LAS VEGAS WASH", hwys: ["I-15", "US-95", "I-215"] },
+        { city: "Reno", state: "NV", zip: "89501", lat: 39.5296, lon: -119.8138, water: "TRUCKEE RIVER", hwys: ["I-80", "I-580", "US-395"] },
+        { city: "Phoenix", state: "AZ", zip: "85004", lat: 33.4484, lon: -112.0740, water: "SALT RIVER", hwys: ["I-10", "I-17", "LOOP 101"] },
+        { city: "Tucson", state: "AZ", zip: "85701", lat: 32.2226, lon: -110.9747, water: "SANTA CRUZ RIVER", hwys: ["I-10", "I-19", "AZ-77"] },
+        { city: "Denver", state: "CO", zip: "80202", lat: 39.7392, lon: -104.9903, water: "SOUTH PLATTE", hwys: ["I-25", "I-70", "US-6"] },
+        { city: "Colorado Springs", state: "CO", zip: "80903", lat: 38.8339, lon: -104.8214, water: "FOUNTAIN CREEK", hwys: ["I-25", "US-24", "CO-21"] },
+        { city: "Salt Lake City", state: "UT", zip: "84101", lat: 40.7608, lon: -111.8910, water: "JORDAN RIVER", hwys: ["I-15", "I-80", "I-215"] },
+        { city: "Albuquerque", state: "NM", zip: "87102", lat: 35.0844, lon: -106.6504, water: "RIO GRANDE", hwys: ["I-25", "I-40", "NM-423"] },
+        { city: "Boise", state: "ID", zip: "83702", lat: 43.6150, lon: -116.2023, water: "BOISE RIVER", hwys: ["I-84", "I-184", "US-20"] },
+        { city: "Billings", state: "MT", zip: "59101", lat: 45.7833, lon: -108.5007, water: "YELLOWSTONE RIVER", hwys: ["I-90", "I-94", "US-87"] },
+        { city: "Cheyenne", state: "WY", zip: "82001", lat: 41.1400, lon: -104.8202, water: "CROW CREEK", hwys: ["I-25", "I-80", "US-85"] },
+        { city: "Anchorage", state: "AK", zip: "99501", lat: 61.2181, lon: -149.9003, water: "COOK INLET", hwys: ["AK-1", "SEWARD HWY", "GLENN HWY"] },
+        { city: "Honolulu", state: "HI", zip: "96813", lat: 21.3069, lon: -157.8583, water: "PACIFIC OCEAN", hwys: ["H-1", "H-201", "US-92"] }
+      ];
+
+      /* ----------------------------------------------------------------------
+         C. MATH, GEO & DETERMINISTIC HELPERS
+         ---------------------------------------------------------------------- */
+      function haversineMiles(lat1, lon1, lat2, lon2) {
+        const toRad = d => (d * Math.PI) / 180;
+        const R = 3958.8;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function pointToPolylineMiles(lat, lon, coords) {
+        let minD = Infinity;
+        for (let i = 0; i < coords.length - 1; i++) {
+          const [lat1, lon1] = coords[i];
+          const [lat2, lon2] = coords[i + 1];
+          const dx = lon2 - lon1;
+          const dy = lat2 - lat1;
+          const lenSq = dx * dx + dy * dy;
+          let t = lenSq === 0 ? 0 : ((lon - lon1) * dx + (lat - lat1) * dy) / lenSq;
+          t = Math.max(0, Math.min(1, t));
+          const projLon = lon1 + t * dx;
+          const projLat = lat1 + t * dy;
+          const d = haversineMiles(lat, lon, projLat, projLon);
+          if (d < minD) minD = d;
+        }
+        return minD;
+      }
+
+      function seededRand(seedStr) {
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < seedStr.length; i++) {
+          h ^= seedStr.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return function () {
+          h += h << 13;
+          h ^= h >>> 7;
+          h += h << 3;
+          h ^= h >>> 17;
+          h += h << 5;
+          return ((h >>> 0) % 10000) / 10000;
+        };
+      }
+
+      function stateFromZipPrefix(zipStr) {
+        const p = parseInt(zipStr.slice(0, 3), 10);
+        if (isNaN(p)) return "IA";
+        if (p >= 5 && p <= 9) return "NY";
+        if (p >= 10 && p <= 27) return "MA";
+        if (p >= 28 && p <= 29) return "RI";
+        if (p >= 30 && p <= 38) return "NH";
+        if (p >= 39 && p <= 49) return "ME";
+        if (p >= 50 && p <= 59) return "VT";
+        if (p >= 60 && p <= 69) return "CT";
+        if (p >= 70 && p <= 89) return "NJ";
+        if (p >= 100 && p <= 149) return "NY";
+        if (p >= 150 && p <= 196) return "PA";
+        if (p >= 197 && p <= 199) return "DE";
+        if (p >= 200 && p <= 205) return "DC";
+        if (p >= 206 && p <= 219) return "MD";
+        if (p >= 220 && p <= 246) return "VA";
+        if (p >= 247 && p <= 268) return "WV";
+        if (p >= 270 && p <= 289) return "NC";
+        if (p >= 290 && p <= 299) return "SC";
+        if (p >= 300 && p <= 319) return "GA";
+        if (p >= 320 && p <= 349) return "FL";
+        if (p >= 350 && p <= 369) return "AL";
+        if (p >= 370 && p <= 385) return "TN";
+        if (p >= 386 && p <= 397) return "MS";
+        if (p >= 398 && p <= 399) return "GA";
+        if (p >= 400 && p <= 427) return "KY";
+        if (p >= 430 && p <= 459) return "OH";
+        if (p >= 460 && p <= 479) return "IN";
+        if (p >= 480 && p <= 499) return "MI";
+        if (p >= 500 && p <= 528) return "IA";
+        if (p >= 530 && p <= 549) return "WI";
+        if (p >= 550 && p <= 567) return "MN";
+        if (p >= 570 && p <= 577) return "SD";
+        if (p >= 580 && p <= 588) return "ND";
+        if (p >= 590 && p <= 599) return "MT";
+        if (p >= 600 && p <= 629) return "IL";
+        if (p >= 630 && p <= 658) return "MO";
+        if (p >= 660 && p <= 679) return "KS";
+        if (p >= 680 && p <= 693) return "NE";
+        if (p >= 700 && p <= 714) return "LA";
+        if (p >= 716 && p <= 729) return "AR";
+        if (p >= 730 && p <= 749) return "OK";
+        if (p >= 750 && p <= 799) return "TX";
+        if (p >= 800 && p <= 816) return "CO";
+        if (p >= 820 && p <= 831) return "WY";
+        if (p >= 832 && p <= 838) return "ID";
+        if (p >= 840 && p <= 847) return "UT";
+        if (p >= 850 && p <= 865) return "AZ";
+        if (p >= 870 && p <= 884) return "NM";
+        if (p >= 885 && p <= 888) return "TX";
+        if (p >= 889 && p <= 898) return "NV";
+        if (p >= 900 && p <= 961) return "CA";
+        if (p >= 967 && p <= 968) return "HI";
+        if (p >= 970 && p <= 979) return "OR";
+        if (p >= 980 && p <= 994) return "WA";
+        if (p >= 995 && p <= 999) return "AK";
+        return "IA";
+      }
+
+      function nearestUSCity(lat, lon) {
+        let best = US_CITIES[0];
+        let bestD = Infinity;
+        for (const c of US_CITIES) {
+          const d = haversineMiles(lat, lon, c.lat, c.lon);
+          if (d < bestD) { bestD = d; best = c; }
+        }
+        return best;
+      }
+
+      function resolveUSLocation(rawQuery) {
+        const q = (rawQuery || "").trim();
+        if (!q) return { ...US_CITIES[0], label: "Dubuque, IA" };
+
+        const zipMatch = q.match(/\b(\d{5})\b/);
+        if (zipMatch) {
+          const zip = zipMatch[1];
+          const exactZipCity = US_CITIES.find(c => c.zip === zip);
+          if (exactZipCity) {
+            return { ...exactZipCity, label: `${exactZipCity.city}, ${exactZipCity.state} (${zip})` };
+          }
+          const stCode = stateFromZipPrefix(zip);
+          const stateRef = US_CITIES.find(c => c.state === stCode) || US_CITIES[0];
+          const rng = seededRand("zip_" + zip);
+          return {
+            city: `ZIP ${zip}`,
+            state: stCode,
+            zip,
+            lat: Number((stateRef.lat + (rng() - 0.5) * 0.35).toFixed(4)),
+            lon: Number((stateRef.lon + (rng() - 0.5) * 0.35).toFixed(4)),
+            water: stateRef.water,
+            hwys: stateRef.hwys,
+            label: `ZIP ${zip} · ${STATE_DATA[stCode].name} (${stCode})`
+          };
+        }
+
+        const norm = q.toLowerCase().replace(/\./g, "").trim();
+        for (const c of US_CITIES) {
+          const full = `${c.city}, ${c.state}`.toLowerCase();
+          if (norm === full || norm === c.city.toLowerCase()) {
+            return { ...c, label: `${c.city}, ${c.state}` };
+          }
+        }
+
+        const parts = norm.split(",").map(s => s.trim());
+        const cityPart = parts[0];
+        const statePart = parts[1] || "";
+        const partial = US_CITIES.find(c => {
+          const matchCity = c.city.toLowerCase().startsWith(cityPart) || c.city.toLowerCase().includes(cityPart);
+          if (!matchCity) return false;
+          if (!statePart) return true;
+          return c.state.toLowerCase() === statePart || STATE_DATA[c.state].name.toLowerCase().startsWith(statePart);
+        });
+        if (partial) {
+          return { ...partial, label: `${partial.city}, ${partial.state}` };
+        }
+
+        for (const [code, info] of Object.entries(STATE_DATA)) {
+          if (norm === code.toLowerCase() || norm === info.name.toLowerCase()) {
+            const hub = US_CITIES.find(c => c.state === code) || US_CITIES[0];
+            return { ...hub, label: `${hub.city}, ${code} (${info.name})` };
+          }
+        }
+
+        let detectedState = "IA";
+        if (statePart) {
+          for (const [code, info] of Object.entries(STATE_DATA)) {
+            if (statePart === code.toLowerCase() || statePart === info.name.toLowerCase()) {
+              detectedState = code;
+              break;
+            }
+          }
+        }
+        const anchor = US_CITIES.find(c => c.state === detectedState) || US_CITIES[0];
+        const rng = seededRand("town_" + norm);
+        const prettyCity = q.split(",")[0].trim().replace(/\b\w/g, l => l.toUpperCase());
+        return {
+          city: prettyCity,
+          state: detectedState,
+          zip: anchor.zip,
+          lat: Number((anchor.lat + (rng() - 0.5) * 0.25).toFixed(4)),
+          lon: Number((anchor.lon + (rng() - 0.5) * 0.25).toFixed(4)),
+          water: anchor.water,
+          hwys: anchor.hwys,
+          label: `${prettyCity}, ${detectedState}`
+        };
+      }
+
+      /* ----------------------------------------------------------------------
+         D. CURATED DUBUQUE + DYNAMIC NATIONWIDE STATIONS & EV CHARGERS
+         ---------------------------------------------------------------------- */
+      const DUBUQUE_CURATED_STATIONS = [
+        { id: "dbq_1", name: "Murphy USA #7412", brand: "Murphy USA", addr: "4200 Dodge St, Dubuque, IA", lat: 42.4912, lon: -90.7355, prices: { regular: 3.44, midgrade: 3.76, premium: 4.08, diesel: 4.86, e85: 2.82 } },
+        { id: "dbq_2", name: "Kwik Star #312", brand: "Kwik Star", addr: "3305 John F Kennedy Rd, Dubuque, IA", lat: 42.4964, lon: -90.7222, prices: { regular: 3.46, midgrade: 3.78, premium: 4.10, diesel: 4.89, e85: 2.84 } },
+        { id: "dbq_3", name: "Kwik Star #688", brand: "Kwik Star", addr: "2340 Central Ave, Dubuque, IA", lat: 42.5145, lon: -90.6685, prices: { regular: 3.48, midgrade: 3.80, premium: 4.12, diesel: 4.90, e85: 2.85 } },
+        { id: "dbq_4", name: "Hy-Vee Fast & Fresh", brand: "Hy-Vee", addr: "3500 Dodge St, Dubuque, IA", lat: 42.4922, lon: -90.7235, prices: { regular: 3.49, midgrade: 3.81, premium: 4.13, diesel: 4.91, e85: 2.86 } },
+        { id: "dbq_5", name: "Casey's General Store", brand: "Casey's", addr: "2495 Asbury Rd, Dubuque, IA", lat: 42.5070, lon: -90.7032, prices: { regular: 3.51, midgrade: 3.83, premium: 4.15, diesel: 4.92, e85: 2.88 } },
+        { id: "dbq_6", name: "BP Express · University", brand: "BP", addr: "1990 University Ave, Dubuque, IA", lat: 42.5015, lon: -90.6914, prices: { regular: 3.59, midgrade: 3.91, premium: 4.23, diesel: 4.99, e85: 2.94 } },
+        { id: "dbq_7", name: "Shell · S Locust St", brand: "Shell", addr: "1150 S Locust St, Dubuque, IA", lat: 42.4825, lon: -90.6648, prices: { regular: 3.64, midgrade: 3.96, premium: 4.28, diesel: 5.04, e85: 2.98 } },
+        { id: "dbq_8", name: "Marathon · East Dubuque (IL)", brand: "Marathon", addr: "210 Sinsinawa Ave, East Dubuque, IL", lat: 42.4918, lon: -90.6435, prices: { regular: 4.09, midgrade: 4.43, premium: 4.79, diesel: 5.21, e85: 3.31 } }
+      ];
+
+      const DUBUQUE_CURATED_EV = [
+        { id: "dbq_e1", name: "Kwik Charge DC Fast · JFK", brand: "Kwik Charge", addr: "3305 John F Kennedy Rd, Dubuque, IA", lat: 42.4966, lon: -90.7218, kw: 180, conn: ["CCS1", "NACS"], stalls: "4/4", rate: 0.32 },
+        { id: "dbq_e2", name: "Tesla Supercharger · Hy-Vee", brand: "Tesla", addr: "3500 Dodge St, Dubuque, IA", lat: 42.4926, lon: -90.7240, kw: 250, conn: ["NACS", "CCS1"], stalls: "7/8", rate: 0.34 },
+        { id: "dbq_e3", name: "ChargePoint · Port of Dubuque", brand: "ChargePoint", addr: "500 Bell St, Dubuque, IA", lat: 42.4945, lon: -90.6565, kw: 62, conn: ["CCS1", "J1772"], stalls: "2/2", rate: 0.26 },
+        { id: "dbq_e4", name: "EVgo Fast Hub · NW Arterial", brand: "EVgo", addr: "2850 NW Arterial, Dubuque, IA", lat: 42.5092, lon: -90.7280, kw: 200, conn: ["CCS1", "NACS"], stalls: "3/4", rate: 0.37 },
+        { id: "dbq_e5", name: "Electrify America · Dodge St", brand: "Electrify America", addr: "4200 Dodge St, Dubuque, IA", lat: 42.4908, lon: -90.7362, kw: 350, conn: ["CCS1"], stalls: "3/4", rate: 0.39 }
+      ];
+
+      const STREET_NAMES = [
+        "Main St", "Broadway", "Market St", "Commerce Blvd", "Park Ave", "Oakwood Dr",
+        "Central Ave", "Washington Blvd", "Lincoln Way", "Airport Rd", "Westgate Pkwy", "Northside Dr"
+      ];
+
+      function buildStationsForLocation(loc) {
+        if (loc.city === "Dubuque" && loc.state === "IA") {
+          return { stations: DUBUQUE_CURATED_STATIONS, ev: DUBUQUE_CURATED_EV };
+        }
+
+        const stInfo = STATE_DATA[loc.state] || STATE_DATA.IA;
+        const rng = seededRand(`${loc.city}_${loc.state}_${loc.zip}`);
+        const chains = stInfo.chains;
+        const stations = [];
+        const spreadRings = [0.008, 0.014, 0.022, 0.032, 0.044, 0.058, 0.072, 0.090, 0.115, 0.145, 0.175];
+
+        for (let i = 0; i < spreadRings.length; i++) {
+          const brand = chains[i % chains.length];
+          const angle = i * 2.39996 + rng() * 0.4;
+          const rDeg = spreadRings[i];
+          const lat = Number((loc.lat + Math.sin(angle) * rDeg).toFixed(4));
+          const lon = Number((loc.lon + (Math.cos(angle) * rDeg) / Math.max(0.45, Math.cos((loc.lat * Math.PI) / 180))).toFixed(4));
+          const street = i % 3 === 0 ? (loc.hwys[i % loc.hwys.length] || STREET_NAMES[i]) : STREET_NAMES[i % STREET_NAMES.length];
+          const num = 100 + Math.floor(rng() * 8800);
+
+          const isDiscount = /Costco|Sam's|Buc-ee|QuikTrip|Kwik|Murphy|H-E-B|Wawa|Sheetz|Woodman|RaceTrac|Maverik|Casey|Hy-Vee|Kroger/i.test(brand);
+          const delta = isDiscount ? (-0.17 + rng() * 0.10) : (-0.03 + rng() * 0.18);
+          const reg = Number(Math.max(2.65, stInfo.reg + delta).toFixed(2));
+          const mid = Number((reg + 0.32).toFixed(2));
+          const prem = Number((reg + 0.64).toFixed(2));
+          const diesel = Number(Math.max(3.80, stInfo.diesel + delta * 0.8).toFixed(2));
+          const e85 = Number(Math.max(2.15, stInfo.e85 + delta * 0.7).toFixed(2));
+
+          stations.push({
+            id: `gen_${loc.state}_${i}`,
+            name: `${brand} #${100 + Math.floor(rng() * 899)}`,
+            brand,
+            addr: `${num} ${street}, ${loc.city}, ${loc.state}`,
+            lat,
+            lon,
+            prices: { regular: reg, midgrade: mid, premium: prem, diesel, e85 }
+          });
+        }
+
+        const evNetworks = [
+          { brand: "Tesla", title: "Tesla Supercharger V3/V4", kw: 250, conn: ["NACS", "CCS1"], stalls: "10/12", delta: -0.02 },
+          { brand: "Electrify America", title: "Electrify America Hyper-Fast", kw: 350, conn: ["CCS1"], stalls: "4/6", delta: 0.03 },
+          { brand: "EVgo", title: "EVgo Fast Charging Plaza", kw: 200, conn: ["CCS1", "NACS"], stalls: "3/4", delta: 0.02 },
+          { brand: "ChargePoint", title: "ChargePoint Express Hub", kw: 125, conn: ["CCS1", "J1772"], stalls: "3/4", delta: -0.05 },
+          { brand: "Regional", title: `${chains[0]} Fast Charge`, kw: 180, conn: ["CCS1", "NACS"], stalls: "4/4", delta: -0.03 }
+        ];
+
+        const ev = evNetworks.map((net, i) => {
+          const angle = i * 1.35 + rng() * 0.5;
+          const rDeg = 0.012 + i * 0.026;
+          const lat = Number((loc.lat + Math.sin(angle) * rDeg).toFixed(4));
+          const lon = Number((loc.lon + Math.cos(angle) * rDeg).toFixed(4));
+          const street = STREET_NAMES[(i * 2) % STREET_NAMES.length];
+          return {
+            id: `genev_${loc.state}_${i}`,
+            name: `${net.title} · ${street}`,
+            brand: net.brand,
+            addr: `${250 + i * 410} ${street}, ${loc.city}, ${loc.state}`,
+            lat,
+            lon,
+            kw: net.kw,
+            conn: net.conn,
+            stalls: net.stalls,
+            rate: Number(Math.max(0.22, stInfo.ev + net.delta + (rng() - 0.5) * 0.03).toFixed(2))
+          };
+        });
+
+        return { stations, ev };
+      }
+
+      function getCommuteRoutesForLocation(loc) {
+        const { lat, lon, city, hwys } = loc;
+        return {
+          west_clarke: {
+            label: `${city} West → North (${hwys[0] || "Main"})`,
+            miles: 4.5,
+            coords: [
+              [lat - 0.008, lon - 0.036],
+              [lat - 0.002, lon - 0.020],
+              [lat + 0.006, lon - 0.005],
+              [lat + 0.014, lon + 0.012]
+            ]
+          },
+          dbq_kennedy: {
+            label: `Downtown ${city} → West Corridor`,
+            miles: 5.1,
+            coords: [
+              [lat + 0.004, lon + 0.028],
+              [lat - 0.001, lon + 0.008],
+              [lat - 0.004, lon - 0.015],
+              [lat + 0.002, lon - 0.032]
+            ]
+          },
+          dbq_east: {
+            label: `${city} Central → East Bridge (${hwys[1] || "Hwy"})`,
+            miles: 4.0,
+            coords: [
+              [lat + 0.006, lon - 0.010],
+              [lat, lon + 0.010],
+              [lat - 0.003, lon + 0.030],
+              [lat - 0.004, lon + 0.048]
+            ]
+          }
+        };
+      }
+
+      /* ----------------------------------------------------------------------
+         E. 92 VEHICLES ACROSS TOP 14 CAR BRANDS
+         ---------------------------------------------------------------------- */
+      const VEHICLES = [
+        // Jeep / RAM
+        { id: "jeep_gc13", brand: "Jeep", name: "2013 Jeep Grand Cherokee", type: "gas", cap: 18.0, eff: 21, grade: "regular", emoji: "🚙" },
+        { id: "jeep_gc24", brand: "Jeep", name: "2024 Jeep Grand Cherokee", type: "gas", cap: 23.0, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "jeep_wran", brand: "Jeep", name: "Jeep Wrangler Unlimited", type: "gas", cap: 21.5, eff: 20, grade: "regular", emoji: "🚙" },
+        { id: "jeep_comp", brand: "Jeep", name: "Jeep Compass 4x4", type: "gas", cap: 13.5, eff: 27, grade: "regular", emoji: "🚙" },
+        { id: "jeep_glad", brand: "Jeep", name: "Jeep Gladiator", type: "gas", cap: 22.0, eff: 19, grade: "regular", emoji: "🛻" },
+        { id: "ram_1500", brand: "RAM", name: "RAM 1500 Crew Cab", type: "gas", cap: 26.0, eff: 20, grade: "regular", emoji: "🛻" },
+        { id: "ram_2500", brand: "RAM", name: "RAM 2500 Cummins Diesel", type: "gas", cap: 31.0, eff: 16, grade: "diesel", emoji: "🛻" },
+
+        // Toyota
+        { id: "toy_cam", brand: "Toyota", name: "Toyota Camry", type: "gas", cap: 15.8, eff: 32, grade: "regular", emoji: "🚗" },
+        { id: "toy_camh", brand: "Toyota", name: "Toyota Camry Hybrid", type: "gas", cap: 13.0, eff: 48, grade: "regular", emoji: "🚗" },
+        { id: "toy_cor", brand: "Toyota", name: "Toyota Corolla", type: "gas", cap: 13.2, eff: 35, grade: "regular", emoji: "🚗" },
+        { id: "toy_rav", brand: "Toyota", name: "Toyota RAV4 AWD", type: "gas", cap: 14.5, eff: 30, grade: "regular", emoji: "🚙" },
+        { id: "toy_ravh", brand: "Toyota", name: "Toyota RAV4 Hybrid", type: "gas", cap: 14.5, eff: 40, grade: "regular", emoji: "🚙" },
+        { id: "toy_high", brand: "Toyota", name: "Toyota Highlander", type: "gas", cap: 17.9, eff: 24, grade: "regular", emoji: "🚙" },
+        { id: "toy_tac", brand: "Toyota", name: "Toyota Tacoma", type: "gas", cap: 18.2, eff: 21, grade: "regular", emoji: "🛻" },
+        { id: "toy_tun", brand: "Toyota", name: "Toyota Tundra", type: "gas", cap: 22.5, eff: 20, grade: "regular", emoji: "🛻" },
+        { id: "toy_pri", brand: "Toyota", name: "Toyota Prius", type: "gas", cap: 11.3, eff: 54, grade: "regular", emoji: "🚗" },
+        { id: "toy_4r", brand: "Toyota", name: "Toyota 4Runner", type: "gas", cap: 23.0, eff: 18, grade: "regular", emoji: "🚙" },
+        { id: "toy_bz", brand: "Toyota", name: "Toyota bZ4X", type: "ev", cap: 71.4, eff: 3.4, grade: "ev", emoji: "⚡" },
+
+        // Ford
+        { id: "fd_f150", brand: "Ford", name: "Ford F-150 EcoBoost", type: "gas", cap: 23.0, eff: 21, grade: "regular", emoji: "🛻" },
+        { id: "fd_f150_36", brand: "Ford", name: "Ford F-150 36-Gal Tank", type: "gas", cap: 36.0, eff: 20, grade: "regular", emoji: "🛻" },
+        { id: "fd_f250", brand: "Ford", name: "Ford F-250 PowerStroke", type: "gas", cap: 34.0, eff: 16, grade: "diesel", emoji: "🛻" },
+        { id: "fd_esc", brand: "Ford", name: "Ford Escape", type: "gas", cap: 14.8, eff: 30, grade: "regular", emoji: "🚙" },
+        { id: "fd_exp", brand: "Ford", name: "Ford Explorer", type: "gas", cap: 17.9, eff: 23, grade: "regular", emoji: "🚙" },
+        { id: "fd_bro", brand: "Ford", name: "Ford Bronco", type: "gas", cap: 20.8, eff: 19, grade: "regular", emoji: "🚙" },
+        { id: "fd_mav", brand: "Ford", name: "Ford Maverick Hybrid", type: "gas", cap: 13.8, eff: 37, grade: "regular", emoji: "🛻" },
+        { id: "fd_mus", brand: "Ford", name: "Ford Mustang GT", type: "gas", cap: 16.0, eff: 20, grade: "premium", emoji: "🏎️" },
+        { id: "fd_me", brand: "Ford", name: "Ford Mustang Mach-E", type: "ev", cap: 88.0, eff: 3.2, grade: "ev", emoji: "⚡" },
+        { id: "fd_lt", brand: "Ford", name: "Ford F-150 Lightning", type: "ev", cap: 98.0, eff: 2.3, grade: "ev", emoji: "⚡" },
+
+        // Chevrolet / GMC
+        { id: "ch_sil", brand: "Chevrolet", name: "Chevy Silverado 1500", type: "gas", cap: 24.0, eff: 19, grade: "regular", emoji: "🛻" },
+        { id: "ch_eq", brand: "Chevrolet", name: "Chevy Equinox", type: "gas", cap: 14.9, eff: 28, grade: "regular", emoji: "🚙" },
+        { id: "ch_mal", brand: "Chevrolet", name: "Chevy Malibu", type: "gas", cap: 15.8, eff: 31, grade: "regular", emoji: "🚗" },
+        { id: "ch_tah", brand: "Chevrolet", name: "Chevy Tahoe", type: "gas", cap: 24.0, eff: 17, grade: "regular", emoji: "🚙" },
+        { id: "ch_trv", brand: "Chevrolet", name: "Chevy Traverse", type: "gas", cap: 19.4, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "ch_col", brand: "Chevrolet", name: "Chevy Colorado", type: "gas", cap: 21.4, eff: 21, grade: "regular", emoji: "🛻" },
+        { id: "ch_blt", brand: "Chevrolet", name: "Chevy Bolt EUV", type: "ev", cap: 65.0, eff: 3.8, grade: "ev", emoji: "⚡" },
+        { id: "ch_eqev", brand: "Chevrolet", name: "Chevy Equinox EV", type: "ev", cap: 85.0, eff: 3.5, grade: "ev", emoji: "⚡" },
+        { id: "gmc_sie", brand: "GMC", name: "GMC Sierra 1500", type: "gas", cap: 24.0, eff: 19, grade: "regular", emoji: "🛻" },
+        { id: "gmc_aca", brand: "GMC", name: "GMC Acadia", type: "gas", cap: 19.4, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "gmc_yuk", brand: "GMC", name: "GMC Yukon", type: "gas", cap: 24.0, eff: 17, grade: "regular", emoji: "🚙" },
+
+        // Honda
+        { id: "hn_civ", brand: "Honda", name: "Honda Civic", type: "gas", cap: 12.4, eff: 36, grade: "regular", emoji: "🚗" },
+        { id: "hn_acc", brand: "Honda", name: "Honda Accord", type: "gas", cap: 14.8, eff: 33, grade: "regular", emoji: "🚗" },
+        { id: "hn_acch", brand: "Honda", name: "Honda Accord Hybrid", type: "gas", cap: 12.8, eff: 46, grade: "regular", emoji: "🚗" },
+        { id: "hn_crv", brand: "Honda", name: "Honda CR-V", type: "gas", cap: 14.0, eff: 30, grade: "regular", emoji: "🚙" },
+        { id: "hn_crvh", brand: "Honda", name: "Honda CR-V Hybrid", type: "gas", cap: 14.0, eff: 39, grade: "regular", emoji: "🚙" },
+        { id: "hn_pil", brand: "Honda", name: "Honda Pilot", type: "gas", cap: 18.5, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "hn_ody", brand: "Honda", name: "Honda Odyssey", type: "gas", cap: 19.5, eff: 22, grade: "regular", emoji: "🚐" },
+        { id: "hn_pro", brand: "Honda", name: "Honda Prologue EV", type: "ev", cap: 85.0, eff: 3.3, grade: "ev", emoji: "⚡" },
+
+        // Nissan
+        { id: "ni_alt", brand: "Nissan", name: "Nissan Altima", type: "gas", cap: 16.2, eff: 32, grade: "regular", emoji: "🚗" },
+        { id: "ni_rog", brand: "Nissan", name: "Nissan Rogue", type: "gas", cap: 14.5, eff: 32, grade: "regular", emoji: "🚙" },
+        { id: "ni_sen", brand: "Nissan", name: "Nissan Sentra", type: "gas", cap: 12.4, eff: 34, grade: "regular", emoji: "🚗" },
+        { id: "ni_pat", brand: "Nissan", name: "Nissan Pathfinder", type: "gas", cap: 18.5, eff: 23, grade: "regular", emoji: "🚙" },
+        { id: "ni_fro", brand: "Nissan", name: "Nissan Frontier", type: "gas", cap: 21.1, eff: 20, grade: "regular", emoji: "🛻" },
+        { id: "ni_ari", brand: "Nissan", name: "Nissan Ariya", type: "ev", cap: 87.0, eff: 3.3, grade: "ev", emoji: "⚡" },
+        { id: "ni_lea", brand: "Nissan", name: "Nissan LEAF Plus", type: "ev", cap: 60.0, eff: 3.6, grade: "ev", emoji: "⚡" },
+
+        // Hyundai & Kia
+        { id: "hy_ela", brand: "Hyundai", name: "Hyundai Elantra", type: "gas", cap: 12.4, eff: 36, grade: "regular", emoji: "🚗" },
+        { id: "hy_son", brand: "Hyundai", name: "Hyundai Sonata", type: "gas", cap: 15.9, eff: 31, grade: "regular", emoji: "🚗" },
+        { id: "hy_tuc", brand: "Hyundai", name: "Hyundai Tucson", type: "gas", cap: 14.3, eff: 28, grade: "regular", emoji: "🚙" },
+        { id: "hy_san", brand: "Hyundai", name: "Hyundai Santa Fe", type: "gas", cap: 17.7, eff: 24, grade: "regular", emoji: "🚙" },
+        { id: "hy_pal", brand: "Hyundai", name: "Hyundai Palisade", type: "gas", cap: 18.8, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "hy_io5", brand: "Hyundai", name: "Hyundai IONIQ 5", type: "ev", cap: 77.4, eff: 3.6, grade: "ev", emoji: "⚡" },
+        { id: "hy_io6", brand: "Hyundai", name: "Hyundai IONIQ 6", type: "ev", cap: 77.4, eff: 4.1, grade: "ev", emoji: "⚡" },
+        { id: "ki_for", brand: "Kia", name: "Kia Forte / K4", type: "gas", cap: 14.0, eff: 34, grade: "regular", emoji: "🚗" },
+        { id: "ki_spo", brand: "Kia", name: "Kia Sportage", type: "gas", cap: 14.3, eff: 28, grade: "regular", emoji: "🚙" },
+        { id: "ki_tel", brand: "Kia", name: "Kia Telluride", type: "gas", cap: 18.8, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "ki_sor", brand: "Kia", name: "Kia Sorento", type: "gas", cap: 17.7, eff: 25, grade: "regular", emoji: "🚙" },
+        { id: "ki_ev6", brand: "Kia", name: "Kia EV6 Long Range", type: "ev", cap: 77.4, eff: 3.6, grade: "ev", emoji: "⚡" },
+        { id: "ki_ev9", brand: "Kia", name: "Kia EV9", type: "ev", cap: 99.8, eff: 2.9, grade: "ev", emoji: "⚡" },
+
+        // Subaru
+        { id: "sb_out", brand: "Subaru", name: "Subaru Outback", type: "gas", cap: 18.5, eff: 28, grade: "regular", emoji: "🚙" },
+        { id: "sb_for", brand: "Subaru", name: "Subaru Forester", type: "gas", cap: 16.6, eff: 29, grade: "regular", emoji: "🚙" },
+        { id: "sb_cro", brand: "Subaru", name: "Subaru Crosstrek", type: "gas", cap: 16.6, eff: 30, grade: "regular", emoji: "🚙" },
+        { id: "sb_asc", brand: "Subaru", name: "Subaru Ascent", type: "gas", cap: 19.3, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "sb_wrx", brand: "Subaru", name: "Subaru WRX", type: "gas", cap: 16.6, eff: 22, grade: "premium", emoji: "🏎️" },
+
+        // Volkswagen
+        { id: "vw_jet", brand: "Volkswagen", name: "VW Jetta", type: "gas", cap: 13.2, eff: 34, grade: "regular", emoji: "🚗" },
+        { id: "vw_tig", brand: "Volkswagen", name: "VW Tiguan", type: "gas", cap: 15.3, eff: 26, grade: "regular", emoji: "🚙" },
+        { id: "vw_atl", brand: "Volkswagen", name: "VW Atlas", type: "gas", cap: 18.6, eff: 22, grade: "regular", emoji: "🚙" },
+        { id: "vw_id4", brand: "Volkswagen", name: "VW ID.4 Pro", type: "ev", cap: 82.0, eff: 3.4, grade: "ev", emoji: "⚡" },
+
+        // BMW & Mercedes-Benz
+        { id: "bm_330", brand: "BMW", name: "BMW 330i", type: "gas", cap: 15.6, eff: 29, grade: "premium", emoji: "🚗" },
+        { id: "bm_x3", brand: "BMW", name: "BMW X3 xDrive30i", type: "gas", cap: 17.2, eff: 25, grade: "premium", emoji: "🚙" },
+        { id: "bm_x5", brand: "BMW", name: "BMW X5 xDrive40i", type: "gas", cap: 21.9, eff: 24, grade: "premium", emoji: "🚙" },
+        { id: "bm_i4", brand: "BMW", name: "BMW i4 eDrive40", type: "ev", cap: 83.9, eff: 3.5, grade: "ev", emoji: "⚡" },
+        { id: "mb_c30", brand: "Mercedes-Benz", name: "Mercedes C 300", type: "gas", cap: 17.4, eff: 28, grade: "premium", emoji: "🚗" },
+        { id: "mb_glc", brand: "Mercedes-Benz", name: "Mercedes GLC 300", type: "gas", cap: 17.4, eff: 26, grade: "premium", emoji: "🚙" },
+        { id: "mb_gle", brand: "Mercedes-Benz", name: "Mercedes GLE 350", type: "gas", cap: 22.5, eff: 22, grade: "premium", emoji: "🚙" },
+        { id: "mb_eqe", brand: "Mercedes-Benz", name: "Mercedes EQE 350+", type: "ev", cap: 90.6, eff: 3.4, grade: "ev", emoji: "⚡" },
+
+        // Tesla & Rivian
+        { id: "ts_m3r", brand: "Tesla", name: "Tesla Model 3 RWD", type: "ev", cap: 60.0, eff: 4.3, grade: "ev", emoji: "⚡" },
+        { id: "ts_m3l", brand: "Tesla", name: "Tesla Model 3 Long Range", type: "ev", cap: 82.0, eff: 4.1, grade: "ev", emoji: "⚡" },
+        { id: "ts_myl", brand: "Tesla", name: "Tesla Model Y Long Range", type: "ev", cap: 81.0, eff: 3.8, grade: "ev", emoji: "⚡" },
+        { id: "ts_ms", brand: "Tesla", name: "Tesla Model S", type: "ev", cap: 100.0, eff: 3.6, grade: "ev", emoji: "⚡" },
+        { id: "ts_cyb", brand: "Tesla", name: "Tesla Cybertruck AWD", type: "ev", cap: 123.0, eff: 2.5, grade: "ev", emoji: "⚡" },
+        { id: "rv_r1t", brand: "Rivian", name: "Rivian R1T Large Pack", type: "ev", cap: 135.0, eff: 2.4, grade: "ev", emoji: "⚡" },
+        { id: "rv_r1s", brand: "Rivian", name: "Rivian R1S Large Pack", type: "ev", cap: 135.0, eff: 2.4, grade: "ev", emoji: "⚡" }
+      ];
+
+      /* ----------------------------------------------------------------------
+         F. BILINGUAL DICTIONARY (ES / EN)
+         ---------------------------------------------------------------------- */
+      const STRINGS = {
+        es: {
+          tabLocal: "Local / EV",
+          tabTrip: "Trip Planner",
+          tabLog: "Fuel Log",
+          scopeRadius: "Por Radio",
+          scopeCommute: "En Mi Ruta",
+          goBtn: "Buscar",
+          gpsBtn: "Mi GPS",
+          quickCitiesLbl: "Ciudades rápidas:",
+          sortNet: "Costo Real $",
+          sortPump: "Precio Bomba",
+          sortDist: "Más Cercana",
+          calcTripBtn: "Calcular ruta",
+          startPctLbl: "Tanque inicial:",
+          reservePctLbl: "Reserva mín.:",
+          oneWay: "Solo Ida",
+          roundTrip: "Ida y Vuelta",
+          tripDist: "Distancia",
+          tripBurn: "Consumo",
+          tripCost: "Gasto Total",
+          recenter: "Centrar",
+          logHeading: "Historial de Carga & MPG Real",
+          newFillUp: "Registrar carga",
+          kpiMonth: "Gasto este mes",
+          kpiVol: "Volumen acumulado",
+          kpiAvgRate: "Precio promedio pagado",
+          kpiMpg: "MPG Real Medido",
+          chartTitle: "Gasto mensual en combustible",
+          chartHint: "Usa el botón \"+ Cargué aquí\" en cualquier gasolinera o \"+ Registrar carga\" arriba para empezar desde cero.",
+          ledgerTitle: "Registro de cargas",
+          garageTitle: "Selecciona tu vehículo",
+          garageSub: "Configura automáticamente la capacidad del tanque o batería y su rendimiento.",
+          customCarLbl: "+ Auto personalizado:",
+          applyBtn: "Aplicar",
+          reportBadge: "ACTUALIZAR PRECIO",
+          cancelBtn: "Cancelar",
+          savePriceBtn: "Guardar precio",
+          logBadge: "REGISTRAR CARGA",
+          logModalTitle: "Guardar en Fuel Log",
+          logStationLbl: "Estación / Red",
+          logMilesLbl: "Millas (opc.)",
+          saveBtn: "Guardar"
+        },
+        en: {
+          tabLocal: "Local / EV",
+          tabTrip: "Trip Planner",
+          tabLog: "Fuel Log",
+          scopeRadius: "By Radius",
+          scopeCommute: "On My Route",
+          goBtn: "Search",
+          gpsBtn: "My GPS",
+          quickCitiesLbl: "Quick cities:",
+          sortNet: "True Cost $",
+          sortPump: "Pump Price",
+          sortDist: "Closest",
+          calcTripBtn: "Calculate route",
+          startPctLbl: "Starting tank:",
+          reservePctLbl: "Min reserve:",
+          oneWay: "One-Way",
+          roundTrip: "Round-Trip",
+          tripDist: "Distance",
+          tripBurn: "Est. Burn",
+          tripCost: "Total Spend",
+          recenter: "Recenter",
+          logHeading: "Monthly Fuel Log & Real MPG",
+          newFillUp: "Log Fill-Up",
+          kpiMonth: "Spent this month",
+          kpiVol: "Total volume",
+          kpiAvgRate: "Avg paid rate",
+          kpiMpg: "Measured Real MPG",
+          chartTitle: "Monthly fuel spend",
+          chartHint: "Click \"+ Log Fill-Up\" on any station card or \"+ Log Fill-Up\" above to start logging from scratch.",
+          ledgerTitle: "Fill-up ledger",
+          garageTitle: "Select your vehicle",
+          garageSub: "Automatically sets tank or battery capacity and real-world efficiency.",
+          customCarLbl: "+ Custom vehicle:",
+          applyBtn: "Apply",
+          reportBadge: "REPORT PUMP PRICE",
+          cancelBtn: "Cancel",
+          savePriceBtn: "Save price",
+          logBadge: "LOG FILL-UP",
+          logModalTitle: "Save to Fuel Log",
+          logStationLbl: "Station / Network",
+          logMilesLbl: "Miles (opt.)",
+          saveBtn: "Save"
+        }
+      };
+
+      /* ----------------------------------------------------------------------
+         G. APPLICATION STATE (FUEL LOG STARTS COMPLETELY EMPTY [])
+         ---------------------------------------------------------------------- */
+      const STATE = {
+        theme: "light",
+        lang: "es",
+        view: "local",          // "local" | "trip" | "log"
+        scope: "radius",        // "radius" | "commute"
+        location: resolveUSLocation("Dubuque, IA"),
+        radius: 5,
+        commuteKey: "west_clarke",
+        grade: "regular",       // "regular" | "midgrade" | "premium" | "diesel" | "e85" | "ev"
+        evFilter: "all",        // "all" | "fast" | "NACS" | "CCS1"
+        sort: "net",            // "net" | "pump" | "dist"
+        vehicleId: "jeep_gc13",
+        vehicleName: "2013 Jeep Grand Cherokee",
+        vehicleEmoji: "🚙",
+        cap: 18.0,
+        eff: 21.0,
+        selectedId: null,
+        expandedId: null,
+        priceOverrides: {},
+        tripFrom: "Dubuque, IA",
+        tripTo: "Nashville, TN",
+        tripStartPct: 85,
+        tripReservePct: 15,
+        tripRound: false,
+        tripComputed: null,
+        garageType: "all",
+        garageBrand: "all",
+        reportingId: null,
+        mapZoom: 1,
+        mapPanX: 0,
+        mapPanY: 0,
+        fuelLogs: []            // Starts completely empty ($0.00) per user request!
+      };
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+      }
+
+      /* ----------------------------------------------------------------------
+         H. COMPUTE LOCAL STATIONS / EV CHARGERS
+         ---------------------------------------------------------------------- */
+      function getComputedLocalItems() {
+        const loc = STATE.location;
+        const bundle = buildStationsForLocation(loc);
+        const isEv = STATE.grade === "ev";
+        const routes = getCommuteRoutesForLocation(loc);
+        const routeObj = routes[STATE.commuteKey] || routes.west_clarke;
+
+        if (isEv) {
+          return bundle.ev
+            .filter(c => {
+              if (STATE.evFilter === "fast") return c.kw >= 150;
+              if (STATE.evFilter === "NACS" || STATE.evFilter === "CCS1") return c.conn.includes(STATE.evFilter);
+              return true;
+            })
+            .map(c => {
+              const dist = Math.max(0.3, haversineMiles(loc.lat, loc.lon, c.lat, c.lon) * 1.15);
+              const detour = STATE.scope === "commute" ? pointToPolylineMiles(c.lat, c.lon, routeObj.coords) : dist;
+              const kwhAdded = Number((STATE.cap * 0.6).toFixed(1));
+              const rate = (STATE.priceOverrides[c.id] && STATE.priceOverrides[c.id].ev) || c.rate;
+              const roundTripKwh = (detour * 2) / Math.max(1, STATE.eff);
+              const detourCost = roundTripKwh * rate;
+              const netTotal = kwhAdded * rate + detourCost;
+              const mins = Math.max(12, Math.round((kwhAdded / (c.kw * 0.72)) * 60));
+              return {
+                ...c,
+                isEv: true,
+                dist: Number(dist.toFixed(1)),
+                detour: Number(detour.toFixed(1)),
+                pumpPrice: rate,
+                units: kwhAdded,
+                detourCost: Number(detourCost.toFixed(2)),
+                netTotal: Number(netTotal.toFixed(2)),
+                chargeMins: mins
+              };
+            })
+            .filter(item => STATE.scope === "commute" ? item.detour <= 0.85 : item.dist <= STATE.radius)
+            .sort((a, b) => STATE.sort === "pump" ? a.pumpPrice - b.pumpPrice : STATE.sort === "dist" ? a.dist - b.dist : a.netTotal - b.netTotal);
+        }
+
+        return bundle.stations
+          .map(s => {
+            const dist = Math.max(0.3, haversineMiles(loc.lat, loc.lon, s.lat, s.lon) * 1.15);
+            const detour = STATE.scope === "commute" ? pointToPolylineMiles(s.lat, s.lon, routeObj.coords) : dist;
+            const ov = STATE.priceOverrides[s.id];
+            const pumpPrice = (ov && ov[STATE.grade]) || s.prices[STATE.grade] || s.prices.regular;
+            const units = STATE.cap;
+            const roundTripGal = (detour * 2) / Math.max(1, STATE.eff);
+            const detourCost = roundTripGal * pumpPrice;
+            const netTotal = units * pumpPrice + detourCost;
+            return {
+              ...s,
+              isEv: false,
+              dist: Number(dist.toFixed(1)),
+              detour: Number(detour.toFixed(1)),
+              pumpPrice: Number(pumpPrice.toFixed(2)),
+              units,
+              detourCost: Number(detourCost.toFixed(2)),
+              netTotal: Number(netTotal.toFixed(2))
+            };
+          })
+          .filter(item => STATE.scope === "commute" ? item.detour <= 0.85 : item.dist <= STATE.radius)
+          .sort((a, b) => STATE.sort === "pump" ? a.pumpPrice - b.pumpPrice : STATE.sort === "dist" ? a.dist - b.dist : a.netTotal - b.netTotal);
+      }
+
+      /* ----------------------------------------------------------------------
+         I. RENDER LOCAL STATION / EV CARDS
+         ---------------------------------------------------------------------- */
+      function renderLocalView() {
+        const items = getComputedLocalItems();
+        const loc = STATE.location;
+        const stInfo = STATE_DATA[loc.state] || STATE_DATA.IA;
+        const isEv = STATE.grade === "ev";
+        const es = STATE.lang === "es";
+        const routes = getCommuteRoutesForLocation(loc);
+
+        document.getElementById("commuteChip0").textContent = routes.west_clarke.label;
+        document.getElementById("commuteChip1").textContent = routes.dbq_kennedy.label;
+        document.getElementById("commuteChip2").textContent = routes.dbq_east.label;
+
+        document.getElementById("headerSubtitle").textContent =
+          STATE.scope === "commute"
+            ? `🛣️ ${routes[STATE.commuteKey].label} (${routes[STATE.commuteKey].miles} mi)`
+            : `📍 ${loc.label} · ${es ? "Prom. estatal" : "State avg"} ${stInfo.name}: $${stInfo.reg.toFixed(2)}/gal`;
+
+        const unitSuffix = isEv ? "/kWh" : "/gal";
+        const unitName = isEv ? "kWh" : "gal";
+
+        document.getElementById("listCountLabel").textContent = isEv
+          ? `${items.length} ${es ? "cargadores en" : "chargers in"} ${loc.city}, ${loc.state}`
+          : `${items.length} ${es ? "estaciones en" : "stations in"} ${loc.city}, ${loc.state}`;
+
+        const avgRate = items.length
+          ? items.reduce((a, b) => a + b.pumpPrice, 0) / items.length
+          : (isEv ? stInfo.ev : stInfo.reg);
+
+        document.getElementById("listAvgLabel").textContent =
+          `${es ? "Promedio:" : "Avg:"} $${avgRate.toFixed(2)}${unitSuffix}`;
+
+        if (items.length > 0) {
+          const maxTotal = Math.max(...items.map(i => i.netTotal));
+          const bestTotal = items[0].netTotal;
+          const saveDiff = Math.max(0.25, maxTotal - bestTotal);
+          document.getElementById("savingsPill").textContent = isEv
+            ? `▼ ${es ? "Ahorras hasta" : "Save up to"} $${saveDiff.toFixed(2)} ${es ? "cargando hoy" : "charging today"}`
+            : `▼ ${es ? "Ahorras hasta" : "Save up to"} $${saveDiff.toFixed(2)} ${es ? "llenando hoy" : "filling up today"}`;
+        } else {
+          document.getElementById("savingsPill").textContent = es ? "Amplía el radio para ver precios" : "Expand radius to view prices";
+        }
+
+        const container = document.getElementById("cardsContainer");
+        if (items.length === 0) {
+          container.innerHTML = `
+            <div class="card">
+              <strong>${es ? "No hay estaciones en este radio o ruta." : "No stations found in this radius or route."}</strong>
+              <p style="font-size:12px; color:var(--ink-soft); margin:6px 0 10px;">
+                ${es ? "Amplía el radio a 15 mi para ver todas las estaciones de la zona." : "Expand search radius to 15 mi to see all area stations."}
+              </p>
+              <button type="button" class="btn btn-primary" data-action="set-radius" data-r="15">
+                ${es ? "Ampliar a 15 mi" : "Expand to 15 mi"}
+              </button>
+            </div>
+          `;
+          renderMap(items);
+          return;
+        }
+
+        if (!STATE.selectedId || !items.some(i => i.id === STATE.selectedId)) {
+          STATE.selectedId = items[0].id;
+        }
+
+        const maxNet = Math.max(...items.map(i => i.netTotal));
+
+        container.innerHTML = items.map((item, idx) => {
+          const isBest = idx === 0;
+          const isSel = item.id === STATE.selectedId;
+          const isExp = item.id === STATE.expandedId;
+          const saveVsMax = Math.max(0, maxNet - item.netTotal);
+          const distLabel = STATE.scope === "commute"
+            ? `+${item.detour} mi ${es ? "desvío" : "detour"}`
+            : `${item.dist} mi`;
+
+          const evBadges = item.isEv
+            ? `<span class="badge-aaa mono">${item.kw} kW</span> <span class="rank-tag mono">${item.conn.join(" / ")} · ${item.stalls} ${es ? "libres" : "open"}</span>`
+            : `<span class="rank-tag">${item.brand}</span>`;
+
+          return `
+            <article class="card ${isBest ? "is-best" : ""} ${isSel ? "is-selected" : ""}" data-station-card="${item.id}">
+              <div class="card-top" data-action="select-station" data-id="${item.id}">
+                <div style="min-width:0;">
+                  <div class="chip-row">
+                    <span class="rank-tag ${isBest ? "best" : ""} mono">
+                      ${isBest ? (es ? "#1 MEJOR OPCIÓN" : "#1 BEST DEAL") : `#${idx + 1}`}
+                    </span>
+                    ${evBadges}
+                    <span class="mono" style="font-size:11px; color:var(--ink-soft);">${distLabel}</span>
+                  </div>
+                  <h3 class="station-name">${item.name}</h3>
+                  <div class="station-meta">${item.addr}</div>
+                </div>
+
+                <div class="price-block">
+                  <div class="pump-price mono">$${item.pumpPrice.toFixed(2)}<span style="font-size:11px; font-weight:500;">${unitSuffix}</span></div>
+                  <div class="net-total mono">$${item.netTotal.toFixed(2)} ${es ? "total real" : "true total"}</div>
+                  ${saveVsMax > 0.05 ? `<div class="mono" style="font-size:10px; color:var(--deal);">${es ? "Ahorras" : "Save"} $${saveVsMax.toFixed(2)}</div>` : ""}
+                </div>
+              </div>
+
+              <div class="card-breakdown ${isExp ? "open" : ""} mono">
+                <div class="breakdown-row">
+                  <span>${item.isEv ? (es ? "Carga (20%→80%):" : "Charge (20%→80%):") : (es ? "Combustible:" : "Fuel:")} ${item.units} ${unitName} × $${item.pumpPrice.toFixed(2)}</span>
+                  <strong>$${(item.units * item.pumpPrice).toFixed(2)}</strong>
+                </div>
+                <div class="breakdown-row">
+                  <span>${es ? "Gasolina desvío ida/vuelta:" : "Round-trip detour burn:"}</span>
+                  <strong>+$${item.detourCost.toFixed(2)}</strong>
+                </div>
+                ${item.isEv ? `<div class="breakdown-row"><span>${es ? "Tiempo estimado:" : "Est. charge time:"}</span><strong>~${item.chargeMins} min</strong></div>` : ""}
+                <div class="breakdown-row" style="border-top:1px solid var(--border); margin-top:4px; padding-top:4px; color:var(--deal);">
+                  <span>${es ? "Salida real de bolsillo:" : "True out-of-pocket:"}</span>
+                  <strong>$${item.netTotal.toFixed(2)}</strong>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn" data-action="toggle-breakdown" data-id="${item.id}">
+                  ${isExp ? (es ? "Ocultar desglose" : "Hide math") : (es ? "Ver desglose" : "View math")}
+                </button>
+                <div class="chip-row">
+                  <button type="button" class="btn" data-action="open-report" data-id="${item.id}">
+                    ${es ? "Actualizar precio" : "Report price"}
+                  </button>
+                  <button type="button" class="btn btn-deal" data-action="open-log-station" data-id="${item.id}">
+                    ${es ? "+ Cargué aquí" : "+ Log Fill-Up"}
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        renderMap(items);
+      }
+
+      /* ----------------------------------------------------------------------
+         J. GUARANTEED VISIBLE INTERACTIVE CANVAS MAP + HTML OVERLAY PINS
+         ---------------------------------------------------------------------- */
+      function renderMap(items) {
+        const canvas = document.getElementById("mapCanvas");
+        const viewport = document.getElementById("mapViewport");
+        const pinLayer = document.getElementById("mapPinLayer");
+        if (!canvas || !viewport || !pinLayer) return;
+
+        const rect = viewport.getBoundingClientRect();
+        const w = Math.max(320, Math.floor(rect.width || viewport.offsetWidth || 640));
+        const h = Math.max(340, Math.floor(rect.height || viewport.offsetHeight || 540));
+        const dpr = window.devicePixelRatio || 1;
+
+        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+        }
+
+        const ctx = canvas.getContext("2d");
+        ctx.save();
+        ctx.scale(dpr, dpr);
+
+        const dark = STATE.theme === "dark";
+        const loc = STATE.location;
+
+        // 1. Base map ground
+        ctx.fillStyle = dark ? "#0F1824" : "#E8EEF5";
+        ctx.fillRect(0, 0, w, h);
+
+        // Apply pan/zoom
+        ctx.save();
+        ctx.translate(w / 2 + STATE.mapPanX, h / 2 + STATE.mapPanY);
+        ctx.scale(STATE.mapZoom, STATE.mapZoom);
+        ctx.translate(-w / 2, -h / 2);
+
+        // 2. Neighborhood blocks & minor streets
+        ctx.strokeStyle = dark ? "rgba(148,163,184,0.10)" : "rgba(16,35,62,0.08)";
+        ctx.lineWidth = 1;
+        const step = 36;
+        for (let x = -w; x < w * 2; x += step) {
+          ctx.beginPath(); ctx.moveTo(x, -h); ctx.lineTo(x, h * 2); ctx.stroke();
+        }
+        for (let y = -h; y < h * 2; y += step) {
+          ctx.beginPath(); ctx.moveTo(-w, y); ctx.lineTo(w * 2, y); ctx.stroke();
+        }
+
+        // 3. Green parks
+        ctx.fillStyle = dark ? "rgba(52,168,133,0.11)" : "rgba(22,121,92,0.11)";
+        ctx.fillRect(w * 0.12, h * 0.16, 96, 64);
+        ctx.fillRect(w * 0.44, h * 0.68, 114, 68);
+
+        // 4. Waterway / River / Bay
+        ctx.strokeStyle = dark ? "#16324F" : "#B8D4F2";
+        ctx.lineWidth = 34;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(w * 0.80, -40);
+        ctx.bezierCurveTo(w * 0.76, h * 0.30, w * 0.85, h * 0.65, w * 0.79, h + 40);
+        ctx.stroke();
+
+        ctx.fillStyle = dark ? "#5B8FD9" : "#2B5C9E";
+        ctx.font = "bold 10px ui-monospace, monospace";
+        ctx.fillText(loc.water || "WATERWAY", w * 0.68, h * 0.14);
+
+        // 5. Arterial Highways
+        ctx.strokeStyle = dark ? "#2A3E59" : "#CBD5E1";
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.moveTo(-30, h * 0.56);
+        ctx.lineTo(w * 0.45, h * 0.55);
+        ctx.lineTo(w + 30, h * 0.52);
+        ctx.moveTo(w * 0.66, -30);
+        ctx.lineTo(w * 0.64, h * 0.54);
+        ctx.lineTo(w * 0.68, h + 30);
+        ctx.moveTo(w * 0.28, -30);
+        ctx.lineTo(w * 0.30, h * 0.55);
+        ctx.lineTo(w * 0.34, h + 30);
+        ctx.stroke();
+
+        const hwys = loc.hwys || ["US-20", "I-80", "MAIN"];
+        drawHighwayShield(ctx, w * 0.17, h * 0.55, hwys[0] || "HWY 1", dark);
+        drawHighwayShield(ctx, w * 0.65, h * 0.25, hwys[1] || "HWY 2", dark);
+        drawHighwayShield(ctx, w * 0.30, h * 0.32, hwys[2] || "AVE", dark);
+
+        // Project geographic coordinates to canvas space
+        const toScreen = (cx, cy) => ({
+          x: (cx - w / 2) * STATE.mapZoom + w / 2 + STATE.mapPanX,
+          y: (cy - h / 2) * STATE.mapZoom + h / 2 + STATE.mapPanY
+        });
+
+        let pinHtml = "";
+
+        // 6A. Trip Planner Map Mode
+        if (STATE.view === "trip" && STATE.tripComputed) {
+          const tc = STATE.tripComputed;
+          const waypoints = [
+            { x: 95, y: 105, label: `A · ${tc.originLoc.label}`, cls: "" },
+            ...tc.stops.map((st, idx) => ({
+              x: 95 + ((w - 190) * (idx + 1)) / (tc.stops.length + 1),
+              y: 105 + ((h - 175) * (idx + 1)) / (tc.stops.length + 1),
+              label: `STOP #${idx + 1} · $${st.rate.toFixed(2)}`,
+              cls: "best"
+            })),
+            { x: w - 95, y: h - 70, label: `B · ${tc.destLoc.label}`, cls: "" }
+          ];
+
+          ctx.strokeStyle = "#2B5C9E";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          waypoints.forEach((pt, idx) => {
+            if (idx === 0) ctx.moveTo(pt.x, pt.y);
+            else ctx.lineTo(pt.x, pt.y);
+          });
+          ctx.stroke();
+
+          ctx.restore();
+          ctx.restore();
+
+          waypoints.forEach(pt => {
+            const sp = toScreen(pt.x, pt.y);
+            pinHtml += `<div class="map-pin ${pt.cls} mono" style="left:${sp.x.toFixed(1)}px; top:${sp.y.toFixed(1)}px; cursor:default;">${pt.label}</div>`;
+          });
+          pinLayer.innerHTML = pinHtml;
+          return;
+        }
+
+        // 6B. Local / Commute Map Mode
+        let pts = items.map(i => ({ lat: i.lat, lon: i.lon }));
+        const routes = getCommuteRoutesForLocation(loc);
+        if (STATE.scope === "commute") {
+          pts = pts.concat(routes[STATE.commuteKey].coords.map(([lat, lon]) => ({ lat, lon })));
+        } else {
+          pts.push({ lat: loc.lat, lon: loc.lon });
+        }
+
+        const lats = pts.map(p => p.lat);
+        const lons = pts.map(p => p.lon);
+        const minLat = Math.min(...lats) - 0.010;
+        const maxLat = Math.max(...lats) + 0.010;
+        const minLon = Math.min(...lons) - 0.015;
+        const maxLon = Math.max(...lons) + 0.015;
+
+        const project = (lat, lon) => {
+          const nx = (lon - minLon) / Math.max(0.001, maxLon - minLon);
+          const ny = 1 - (lat - minLat) / Math.max(0.001, maxLat - minLat);
+          return {
+            x: 64 + nx * (w - 128),
+            y: 74 + ny * (h - 118)
+          };
+        };
+
+        if (STATE.scope === "commute") {
+          const rCoords = routes[STATE.commuteKey].coords;
+          ctx.strokeStyle = "#2B5C9E";
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          rCoords.forEach(([lat, lon], idx) => {
+            const p = project(lat, lon);
+            if (idx === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.stroke();
+
+          const pStart = toScreen(project(rCoords[0][0], rCoords[0][1]).x, project(rCoords[0][0], rCoords[0][1]).y);
+          const pEnd = toScreen(project(rCoords[rCoords.length - 1][0], rCoords[rCoords.length - 1][1]).x, project(rCoords[rCoords.length - 1][0], rCoords[rCoords.length - 1][1]).y);
+          pinHtml += `<div class="map-pin mono" style="left:${pStart.x.toFixed(1)}px; top:${(pStart.y + 30).toFixed(1)}px; cursor:default;">A · INICIO</div>`;
+          pinHtml += `<div class="map-pin mono" style="left:${pEnd.x.toFixed(1)}px; top:${(pEnd.y + 30).toFixed(1)}px; cursor:default;">B · DESTINO</div>`;
+        } else {
+          // User Center Dot + Radius Ring
+          const cp = project(loc.lat, loc.lon);
+          ctx.strokeStyle = dark ? "rgba(91,143,217,0.35)" : "rgba(29,78,216,0.28)";
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.arc(cp.x, cp.y, Math.min(w, h) * 0.34, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = "rgba(29, 78, 216, 0.20)";
+          ctx.beginPath(); ctx.arc(cp.x, cp.y, 16, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#1D4ED8";
+          ctx.beginPath(); ctx.arc(cp.x, cp.y, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        ctx.restore();
+        ctx.restore();
+
+        // Render real HTML clickable price pins over the canvas
+        items.forEach((item, idx) => {
+          const p = project(item.lat, item.lon);
+          const sp = toScreen(p.x, p.y);
+          const cls = item.id === STATE.selectedId ? "selected" : idx === 0 ? "best" : "";
+          pinHtml += `
+            <button type="button" class="map-pin ${cls} mono" data-action="select-station" data-id="${item.id}" style="left:${sp.x.toFixed(1)}px; top:${sp.y.toFixed(1)}px;">
+              $${item.pumpPrice.toFixed(2)}
+            </button>
+          `;
+        });
+
+        pinLayer.innerHTML = pinHtml;
+      }
+
+      function drawHighwayShield(ctx, x, y, text, dark) {
+        ctx.font = "bold 9px ui-monospace, monospace";
+        const tw = ctx.measureText(text).width + 10;
+        ctx.fillStyle = dark ? "#1A2637" : "#FFFFFF";
+        ctx.strokeStyle = dark ? "#3E5472" : "#94A3B8";
+        ctx.lineWidth = 1;
+        ctx.fillRect(x - tw / 2, y - 8, tw, 16);
+        ctx.strokeRect(x - tw / 2, y - 8, tw, 16);
+        ctx.fillStyle = dark ? "#9FB0C6" : "#4A5C73";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y);
+      }
+
+      /* ----------------------------------------------------------------------
+         K. NATIONWIDE ROAD TRIP PLANNER ENGINE
+         ---------------------------------------------------------------------- */
+      function computeAndRenderTrip() {
+        const fromRaw = document.getElementById("tripFromInput").value.trim() || "Dubuque, IA";
+        const toRaw = document.getElementById("tripToInput").value.trim() || "Nashville, TN";
+        const originLoc = resolveUSLocation(fromRaw);
+        const destLoc = resolveUSLocation(toRaw);
+
+        STATE.tripFrom = originLoc.label;
+        STATE.tripTo = destLoc.label;
+
+        const directMiles = haversineMiles(originLoc.lat, originLoc.lon, destLoc.lat, destLoc.lon);
+        const baseMiles = Math.max(25, Math.round(directMiles * 1.18));
+        const baseMins = Math.round((baseMiles / 64) * 60);
+        const mult = STATE.tripRound ? 2 : 1;
+        const totalMiles = baseMiles * mult;
+        const totalMins = baseMins * mult;
+
+        const isEv = STATE.grade === "ev";
+        const maxRange = STATE.cap * Math.max(1, STATE.eff);
+        const startRange = maxRange * (STATE.tripStartPct / 100);
+        const legRange = Math.max(60, maxRange * ((100 - STATE.tripReservePct) / 100));
+
+        const origState = STATE_DATA[originLoc.state] || STATE_DATA.IA;
+        const destState = STATE_DATA[destLoc.state] || STATE_DATA.TN;
+
+        const stops = [];
+        let covered = startRange;
+        let idx = 0;
+
+        while (covered < totalMiles && idx < 14) {
+          const mileMark = Math.round(covered - 18);
+          const progress = Math.min(1, Math.max(0, mileMark / Math.max(1, baseMiles)));
+          const interpLat = originLoc.lat + (destLoc.lat - originLoc.lat) * progress;
+          const interpLon = originLoc.lon + (destLoc.lon - originLoc.lon) * progress;
+          const nearHub = nearestUSCity(interpLat, interpLon);
+          const hubState = STATE_DATA[nearHub.state] || origState;
+
+          const chain = hubState.chains[0] || "Love's / Pilot";
+          const rate = isEv
+            ? Number(Math.max(0.26, hubState.ev - 0.02).toFixed(2))
+            : Number(Math.max(2.75, hubState.reg - 0.14).toFixed(2));
+          const units = Number((STATE.cap * (1 - STATE.tripReservePct / 100)).toFixed(1));
+
+          const note = origState.reg > destState.reg
+            ? (STATE.lang === "es" ? `Más barato que ${originLoc.state} ($${origState.reg.toFixed(2)}/gal).` : `Cheaper than ${originLoc.state} ($${origState.reg.toFixed(2)}/gal).`)
+            : (STATE.lang === "es" ? `Parada óptima en corredor ${nearHub.state}.` : `Optimal highway corridor stop in ${nearHub.state}.`);
+
+          stops.push({
+            num: idx + 1,
+            mile: mileMark,
+            city: `${nearHub.city}, ${nearHub.state} (Mi ${mileMark})`,
+            station: isEv ? `Tesla / Electrify America · ${nearHub.hwys[0]}` : `${chain} · ${nearHub.hwys[0]}`,
+            rate,
+            units,
+            cost: Number((rate * units).toFixed(2)),
+            note
+          });
+
+          covered += legRange;
+          idx++;
+        }
+
+        const totalUnits = totalMiles / Math.max(1, STATE.eff);
+        const avgCorridorRate = stops.length
+          ? stops.reduce((a, b) => a + b.rate, 0) / stops.length
+          : (isEv ? (origState.ev + destState.ev) / 2 : (origState.reg + destState.reg) / 2 - 0.08);
+        const totalCost = totalUnits * avgCorridorRate;
+        const avgRetail = isEv ? (origState.ev + destState.ev) / 2 + 0.07 : (origState.reg + destState.reg) / 2 + 0.22;
+        const saved = Math.max(0, totalUnits * (avgRetail - avgCorridorRate));
+
+        STATE.tripComputed = { originLoc, destLoc, totalMiles, totalMins, totalUnits, totalCost, saved, stops };
+
+        const es = STATE.lang === "es";
+        const hrs = Math.floor(totalMins / 60);
+        const mins = totalMins % 60;
+
+        document.getElementById("tripHeadline").textContent = `${originLoc.label} → ${destLoc.label}`;
+        document.getElementById("tripWayTag").textContent = STATE.tripRound ? "ROUND-TRIP" : "ONE-WAY";
+        document.getElementById("tripDistVal").textContent = `${totalMiles.toLocaleString()} mi`;
+        document.getElementById("tripTimeVal").textContent = `~${hrs}h ${mins}m`;
+        document.getElementById("tripBurnVal").textContent = `${totalUnits.toFixed(1)} ${isEv ? "kWh" : "gal"}`;
+        document.getElementById("tripStopsVal").textContent = `${stops.length} ${es ? (stops.length === 1 ? "parada" : "paradas") : (stops.length === 1 ? "stop" : "stops")}`;
+        document.getElementById("tripCostVal").textContent = `$${totalCost.toFixed(2)}`;
+        document.getElementById("tripSaveVal").textContent = `${es ? "Ahorras" : "Save"} $${saved.toFixed(2)}`;
+
+        const container = document.getElementById("cardsContainer");
+        if (stops.length === 0) {
+          container.innerHTML = `
+            <div class="card is-best">
+              <span class="rank-tag best mono">NON-STOP RANGE</span>
+              <h3 class="station-name">${es ? "¡Llegas directo sin parar!" : "You make it non-stop!"}</h3>
+              <p class="station-meta">
+                ${es
+                  ? `Con tu ${STATE.vehicleName} al ${STATE.tripStartPct}%, cubres los ${totalMiles} mi por encima de tu reserva.`
+                  : `With your ${STATE.vehicleName} at ${STATE.tripStartPct}%, you cover ${totalMiles} mi above your reserve.`}
+              </p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = stops.map(st => `
+            <article class="card is-best">
+              <div class="card-top" style="cursor:default;">
+                <div>
+                  <span class="rank-tag best mono">STOP #${st.num} · MILE ${st.mile}</span>
+                  <h3 class="station-name">${st.city}</h3>
+                  <div class="station-meta" style="color:var(--cobalt); font-weight:600;">${st.station}</div>
+                  <p style="font-size:11px; color:var(--ink-soft); margin:5px 0 0;">${st.note}</p>
+                </div>
+                <div class="price-block">
+                  <div class="pump-price mono">$${st.rate.toFixed(2)}<span style="font-size:11px;">${isEv ? "/kWh" : "/gal"}</span></div>
+                  <div class="net-total mono">~$${st.cost.toFixed(2)} (${st.units} ${isEv ? "kWh" : "gal"})</div>
+                </div>
+              </div>
+            </article>
+          `).join("");
+        }
+
+        renderMap([]);
+      }
+
+      /* ----------------------------------------------------------------------
+         L. FUEL LOG VIEW (STARTS AT $0.00 / EMPTY SO USER CAN ADD FROM SCRATCH)
+         ---------------------------------------------------------------------- */
+      function renderFuelLog() {
+        const es = STATE.lang === "es";
+        const novLogs = STATE.fuelLogs.filter(l => l.date.startsWith("2026-11"));
+        const monthSpend = novLogs.reduce((a, b) => a + b.total, 0);
+        const totalUnits = STATE.fuelLogs.reduce((a, b) => a + b.units, 0);
+        const totalSpent = STATE.fuelLogs.reduce((a, b) => a + b.total, 0);
+        const avgPrice = totalUnits > 0 ? totalSpent / totalUnits : null;
+        const mpgEntries = STATE.fuelLogs.filter(l => l.mpg && !l.isEv);
+        const avgMpg = mpgEntries.length ? mpgEntries.reduce((a, b) => a + b.mpg, 0) / mpgEntries.length : null;
+
+        document.getElementById("headerMonthBadge").textContent = `$${Math.round(monthSpend)}`;
+        document.getElementById("kpiMonthVal").textContent = `$${monthSpend.toFixed(2)}`;
+        document.getElementById("kpiMonthSub").textContent = `${novLogs.length} ${es ? "cargas en Nov '26" : "fill-ups in Nov '26"}`;
+        document.getElementById("kpiVolVal").textContent = `${totalUnits.toFixed(1)} gal`;
+        document.getElementById("kpiVolSub").textContent = es ? "Total acumulado" : "Cumulative volume";
+        document.getElementById("kpiRateVal").textContent = avgPrice !== null ? `$${avgPrice.toFixed(2)}/gal` : "—";
+        document.getElementById("kpiRateSub").textContent = avgPrice !== null
+          ? (es ? "Promedio real pagado" : "Actual avg paid")
+          : (es ? "Sin cargas aún" : "No fill-ups yet");
+        document.getElementById("kpiMpgVal").textContent = avgMpg !== null ? `${avgMpg.toFixed(1)} MPG` : "—";
+        document.getElementById("kpiMpgSub").textContent = `vs. ${STATE.eff} MPG (${STATE.vehicleName})`;
+
+        // 6-Month Chart (All $0 until user logs entries!)
+        const months = [
+          { label: "JUN", val: 0 },
+          { label: "JUL", val: 0 },
+          { label: "AGO", val: 0 },
+          { label: "SEP", val: 0 },
+          { label: "OCT", val: 0 },
+          { label: "NOV", val: Math.round(monthSpend), current: true }
+        ];
+        const maxBar = Math.max(100, ...months.map(m => m.val));
+        document.getElementById("spendBarChart").innerHTML = months.map(m => {
+          const pct = m.val > 0 ? Math.max(10, Math.round((m.val / maxBar) * 100)) : 4;
+          return `
+            <div class="bar-col">
+              <span class="mono" style="font-size:10px; font-weight:700;">$${m.val}</span>
+              <div class="bar-fill ${m.current ? "current" : ""}" style="height:${pct}%; opacity:${m.val > 0 ? 1 : 0.25};"></div>
+              <span class="mono" style="font-size:10px; color:var(--ink-soft);">${m.label}</span>
+            </div>
+          `;
+        }).join("");
+
+        document.getElementById("logEntryCount").textContent = `${STATE.fuelLogs.length} ${es ? "entradas" : "entries"}`;
+        const ledger = document.getElementById("logLedgerContainer");
+
+        if (STATE.fuelLogs.length === 0) {
+          ledger.innerHTML = `
+            <div style="background:var(--bg-elevated); border:1px dashed var(--border-strong); border-radius:6px; padding:18px; text-align:center;">
+              <strong style="display:block; font-size:13px;">
+                ${es ? "Aún no tienes gastos registrados" : "No fill-ups logged yet"}
+              </strong>
+              <p style="font-size:12px; color:var(--ink-soft); margin:6px 0 12px;">
+                ${es ? "Empieza desde cero registrando tu primera carga de gasolina o carga EV." : "Start from scratch by logging your first gas fill-up or EV charge."}
+              </p>
+              <button type="button" class="btn btn-primary" data-action="open-new-log">
+                + ${es ? "Registrar mi primer gasto" : "Log my first fill-up"}
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        ledger.innerHTML = STATE.fuelLogs.map(item => `
+          <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:5px; padding:9px 11px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div>
+              <div class="chip-row">
+                <span class="rank-tag mono">${item.date}</span>
+                <strong style="font-size:13px;">${item.station}</strong>
+                ${item.mpg ? `<span class="rank-tag best mono">${item.mpg.toFixed(1)} MPG</span>` : ""}
+              </div>
+              <div class="mono" style="font-size:11px; color:var(--ink-soft); margin-top:3px;">
+                ${item.units.toFixed(1)} ${item.isEv ? "kWh" : "gal"} × $${item.price.toFixed(2)}
+              </div>
+            </div>
+            <div class="chip-row">
+              <strong class="mono" style="font-size:14px;">$${item.total.toFixed(2)}</strong>
+              <button type="button" class="btn" data-action="delete-log" data-id="${item.id}">✕</button>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      /* ----------------------------------------------------------------------
+         M. SMART VEHICLE GARAGE MODAL (92 VEHICLES)
+         ---------------------------------------------------------------------- */
+      function renderGarageModal() {
+        const q = (document.getElementById("garageSearch").value || "").trim().toLowerCase();
+        const brands = ["all", ...Array.from(new Set(VEHICLES.map(v => v.brand)))];
+
+        document.getElementById("brandChipsContainer").innerHTML = brands.map(b => `
+          <button type="button" class="chip ${STATE.garageBrand === b ? "active" : ""}" data-action="set-garage-brand" data-brand="${b}">
+            ${b === "all" ? (STATE.lang === "es" ? "Todas las marcas" : "All brands") : b}
+          </button>
+        `).join("");
+
+        const list = VEHICLES.filter(v => {
+          if (STATE.garageType !== "all" && v.type !== STATE.garageType) return false;
+          if (STATE.garageBrand !== "all" && v.brand !== STATE.garageBrand) return false;
+          if (q && !v.name.toLowerCase().includes(q) && !v.brand.toLowerCase().includes(q)) return false;
+          return true;
+        });
+
+        document.getElementById("garageGrid").innerHTML = list.map(v => {
+          const spec = v.type === "ev" ? `${v.cap} kWh · ${v.eff} mi/kWh` : `${v.cap} gal · ${v.eff} MPG`;
+          return `
+            <button type="button" class="garage-item ${v.id === STATE.vehicleId ? "selected" : ""}" data-action="pick-vehicle" data-id="${v.id}">
+              <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                <span style="font-size:18px;">${v.emoji}</span>
+                <div style="min-width:0;">
+                  <div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${v.name}</div>
+                  <div class="mono" style="font-size:10px; color:var(--ink-soft);">${spec}</div>
+                </div>
+              </div>
+              ${v.id === STATE.vehicleId ? `<span class="mono" style="font-size:10px; font-weight:700; color:var(--cobalt);">✓</span>` : ""}
+            </button>
+          `;
+        }).join("");
+      }
+
+      function syncVehicleUI() {
+        const isEv = STATE.grade === "ev";
+        document.getElementById("hdrCarEmoji").textContent = STATE.vehicleEmoji;
+        document.getElementById("hdrCarName").textContent = STATE.vehicleName;
+        document.getElementById("hdrCarSpec").textContent = isEv
+          ? `${STATE.cap} kWh · ${STATE.eff} mi/kWh`
+          : `${STATE.cap} gal · ${STATE.eff} MPG`;
+
+        document.getElementById("quickCapLabel").textContent = isEv
+          ? (STATE.lang === "es" ? "Batería:" : "Battery:")
+          : (STATE.lang === "es" ? "Tanque:" : "Tank:");
+        document.getElementById("quickEffLabel").textContent = isEv ? "mi/kWh:" : "MPG:";
+        document.getElementById("quickCapInput").value = STATE.cap;
+        document.getElementById("quickEffInput").value = STATE.eff;
+
+        document.querySelectorAll(".grade-chip").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.grade === STATE.grade);
+        });
+        document.getElementById("evSubFilters").classList.toggle("hidden", !isEv);
+      }
+
+      function updateLogPreview() {
+        const units = parseFloat(document.getElementById("logUnitsIn").value) || 0;
+        const price = parseFloat(document.getElementById("logPriceIn").value) || 0;
+        const miles = parseFloat(document.getElementById("logMilesIn").value) || 0;
+        document.getElementById("logTotalPreview").textContent = `$${(units * price).toFixed(2)}`;
+        document.getElementById("logMpgPreview").textContent =
+          miles > 0 && units > 0 && STATE.grade !== "ev"
+            ? `MPG: ${(miles / units).toFixed(1)}`
+            : "MPG: —";
+      }
+
+      function openLogModal(stationItem) {
+        const isEv = STATE.grade === "ev";
+        const stInfo = STATE_DATA[STATE.location.state] || STATE_DATA.IA;
+        document.getElementById("logStationIn").value = stationItem ? stationItem.name : "";
+        document.getElementById("logUnitsIn").value = stationItem ? stationItem.units : STATE.cap;
+        document.getElementById("logPriceIn").value = stationItem ? stationItem.pumpPrice.toFixed(2) : (isEv ? stInfo.ev.toFixed(2) : stInfo.reg.toFixed(2));
+        document.getElementById("logMilesIn").value = "";
+        document.getElementById("logCapLbl").textContent = isEv ? "kWh" : (STATE.lang === "es" ? "Galones" : "Gallons");
+        document.getElementById("logPriceLbl").textContent = isEv ? "Precio ($/kWh)" : (STATE.lang === "es" ? "Precio ($/gal)" : "Price ($/gal)");
+        updateLogPreview();
+        document.getElementById("logModal").classList.add("open");
+      }
+
+      /* ----------------------------------------------------------------------
+         N. VIEW, THEME, LANGUAGE & LOCATION CONTROLLERS
+         ---------------------------------------------------------------------- */
+      function setView(viewName) {
+        STATE.view = viewName;
+        document.querySelectorAll("[data-action='set-view']").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.view === viewName);
+        });
+
+        document.getElementById("localRibbon").classList.toggle("hidden", viewName !== "local");
+        document.getElementById("tripRibbon").classList.toggle("hidden", viewName !== "trip");
+        document.getElementById("mapWorkspace").classList.toggle("hidden", viewName === "log");
+        document.getElementById("logWorkspace").classList.toggle("hidden", viewName !== "log");
+        document.getElementById("localListHeader").classList.toggle("hidden", viewName !== "local");
+        document.getElementById("tripSummaryCard").classList.toggle("hidden", viewName !== "trip");
+
+        if (viewName === "log") {
+          renderFuelLog();
+        } else if (viewName === "trip") {
+          document.getElementById("mapLegendText").textContent =
+            STATE.lang === "es" ? "● Azul = Ruta activa · Verde = Parada recomendada" : "● Blue = Active route · Green = Recommended stop";
+          computeAndRenderTrip();
+        } else {
+          document.getElementById("mapLegendText").textContent =
+            STATE.lang === "es" ? "● Verde = Menor gasto real en bolsillo · Haz clic en un pin" : "● Green = Lowest out-of-pocket cost · Click a pin";
+          renderLocalView();
+        }
+      }
+
+      function applyLanguage() {
+        const dict = STRINGS[STATE.lang] || STRINGS.es;
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+          const k = el.getAttribute("data-i18n");
+          if (dict[k]) el.textContent = dict[k];
+        });
+        document.getElementById("langBtn").textContent = STATE.lang === "es" ? "ES → EN" : "EN → ES";
+        document.getElementById("themeText").textContent = STATE.theme === "dark"
+          ? (STATE.lang === "es" ? "Día" : "Day")
+          : (STATE.lang === "es" ? "Noche" : "Night");
+        syncVehicleUI();
+      }
+
+      function applyNewLocation(queryText) {
+        const resolved = resolveUSLocation(queryText);
+        STATE.location = resolved;
+        STATE.selectedId = null;
+        STATE.expandedId = null;
+        STATE.mapZoom = 1;
+        STATE.mapPanX = 0;
+        STATE.mapPanY = 0;
+        document.getElementById("locationSearchInput").value = resolved.label;
+        document.getElementById("locationAcMenu").classList.remove("open");
+        renderLocalView();
+        showToast(`📍 ${resolved.label}`);
+      }
+
+      function attachAutocomplete(inputId, menuId, onPick) {
+        const inp = document.getElementById(inputId);
+        const menu = document.getElementById(menuId);
+        if (!inp || !menu) return;
+
+        const renderMatches = () => {
+          const val = inp.value.trim().toLowerCase();
+          if (!val) {
+            menu.classList.remove("open");
+            return;
+          }
+          const matches = [];
+          const zipM = val.match(/^\d{5}$/);
+          if (zipM) {
+            const zLoc = resolveUSLocation(zipM[0]);
+            matches.push({ label: zLoc.label, reg: STATE_DATA[zLoc.state].reg });
+          }
+          for (const c of US_CITIES) {
+            const label = `${c.city}, ${c.state}`;
+            if (
+              label.toLowerCase().includes(val) ||
+              c.zip.startsWith(val) ||
+              STATE_DATA[c.state].name.toLowerCase().startsWith(val)
+            ) {
+              if (!matches.some(m => m.label === label)) {
+                matches.push({ label, reg: STATE_DATA[c.state].reg });
+              }
+            }
+            if (matches.length >= 8) break;
+          }
+          if (matches.length === 0) {
+            menu.classList.remove("open");
+            return;
+          }
+          menu.innerHTML = matches.map(m => `
+            <button type="button" class="ac-item" data-ac-val="${m.label}">
+              <span><strong>${m.label}</strong></span>
+              <span class="mono" style="font-size:11px; color:var(--deal);">$${m.reg.toFixed(2)}/gal</span>
+            </button>
+          `).join("");
+          menu.classList.add("open");
+          menu.querySelectorAll(".ac-item").forEach(btn => {
+            btn.addEventListener("click", () => {
+              inp.value = btn.dataset.acVal;
+              menu.classList.remove("open");
+              if (onPick) onPick(btn.dataset.acVal);
+            });
+          });
+        };
+
+        inp.addEventListener("input", renderMatches);
+        inp.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            menu.classList.remove("open");
+            if (onPick) onPick(inp.value);
+          }
+        });
+        document.addEventListener("click", e => {
+          if (!inp.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.remove("open");
+          }
+        });
+      }
+
+      /* ----------------------------------------------------------------------
+         O. CENTRALIZED EVENT DELEGATION & INITIALIZATION
+         ---------------------------------------------------------------------- */
+      function bindEvents() {
+        // Centralized click delegation for ALL buttons/chips/pins/modals
+        document.addEventListener("click", e => {
+          const stopEl = e.target.closest("[data-stop-propagation]");
+          const actionEl = e.target.closest("[data-action]");
+          if (!actionEl) return;
+
+          // If backdrop was clicked directly vs inside modal box
+          if (actionEl.dataset.action === "close-modal" && stopEl && actionEl !== stopEl) {
+            return;
+          }
+
+          const action = actionEl.dataset.action;
+
+          switch (action) {
+            case "set-view":
+              setView(actionEl.dataset.view);
+              break;
+
+            case "toggle-theme":
+              STATE.theme = STATE.theme === "light" ? "dark" : "light";
+              document.documentElement.setAttribute("data-theme", STATE.theme);
+              document.getElementById("themeIcon").textContent = STATE.theme === "dark" ? "☀️" : "🌙";
+              applyLanguage();
+              if (STATE.view === "trip") renderMap([]);
+              else if (STATE.view === "local") renderMap(getComputedLocalItems());
+              break;
+
+            case "toggle-lang":
+              STATE.lang = STATE.lang === "es" ? "en" : "es";
+              applyLanguage();
+              if (STATE.view === "log") renderFuelLog();
+              else if (STATE.view === "trip") computeAndRenderTrip();
+              else renderLocalView();
+              showToast(STATE.lang === "es" ? "Idioma: Español" : "Language: English");
+              break;
+
+            case "set-scope":
+              STATE.scope = actionEl.dataset.scope;
+              document.querySelectorAll("[data-action='set-scope']").forEach(b => {
+                b.classList.toggle("active", b.dataset.scope === STATE.scope);
+              });
+              document.getElementById("radiusControls").classList.toggle("hidden", STATE.scope !== "radius");
+              document.getElementById("commuteControls").classList.toggle("hidden", STATE.scope !== "commute");
+              renderLocalView();
+              break;
+
+            case "search-location":
+              applyNewLocation(document.getElementById("locationSearchInput").value);
+              break;
+
+            case "pick-city":
+              applyNewLocation(actionEl.dataset.loc);
+              break;
+
+            case "use-gps":
+              if (!navigator.geolocation) {
+                showToast(STATE.lang === "es" ? "GPS no disponible en este navegador" : "GPS unavailable");
+                return;
+              }
+              showToast(STATE.lang === "es" ? "Detectando ubicación GPS..." : "Detecting GPS...");
+              navigator.geolocation.getCurrentPosition(
+                pos => {
+                  const { latitude, longitude } = pos.coords;
+                  const nearest = nearestUSCity(latitude, longitude);
+                  STATE.location = {
+                    ...nearest,
+                    lat: Number(latitude.toFixed(4)),
+                    lon: Number(longitude.toFixed(4)),
+                    label: `GPS · ${nearest.city}, ${nearest.state}`
+                  };
+                  document.getElementById("locationSearchInput").value = STATE.location.label;
+                  STATE.selectedId = null;
+                  STATE.mapZoom = 1; STATE.mapPanX = 0; STATE.mapPanY = 0;
+                  renderLocalView();
+                  showToast(`📡 ${STATE.location.label}`);
+                },
+                () => showToast(STATE.lang === "es" ? "Permiso GPS denegado" : "GPS permission denied"),
+                { timeout: 6000 }
+              );
+              break;
+
+            case "set-radius":
+              STATE.radius = Number(actionEl.dataset.r);
+              document.querySelectorAll(".radius-chip").forEach(b => {
+                b.classList.toggle("active", Number(b.dataset.r) === STATE.radius);
+              });
+              renderLocalView();
+              break;
+
+            case "set-commute":
+              STATE.commuteKey = actionEl.dataset.commute;
+              document.querySelectorAll(".commute-chip").forEach(b => {
+                b.classList.toggle("active", b.dataset.commute === STATE.commuteKey);
+              });
+              renderLocalView();
+              break;
+
+            case "set-grade":
+              STATE.grade = actionEl.dataset.grade;
+              STATE.selectedId = null;
+              syncVehicleUI();
+              if (STATE.view === "trip") computeAndRenderTrip();
+              else renderLocalView();
+              break;
+
+            case "set-ev-filter":
+              STATE.evFilter = actionEl.dataset.ev;
+              document.querySelectorAll(".ev-chip").forEach(b => {
+                b.classList.toggle("active", b.dataset.ev === STATE.evFilter);
+              });
+              renderLocalView();
+              break;
+
+            case "set-sort":
+              STATE.sort = actionEl.dataset.sort;
+              document.querySelectorAll(".sort-chip").forEach(b => {
+                b.classList.toggle("active", b.dataset.sort === STATE.sort);
+              });
+              renderLocalView();
+              break;
+
+            case "select-station":
+              STATE.selectedId = actionEl.dataset.id;
+              renderLocalView();
+              break;
+
+            case "toggle-breakdown":
+              STATE.expandedId = STATE.expandedId === actionEl.dataset.id ? null : actionEl.dataset.id;
+              renderLocalView();
+              break;
+
+            case "open-report": {
+              const target = getComputedLocalItems().find(i => i.id === actionEl.dataset.id);
+              if (!target) return;
+              STATE.reportingId = target.id;
+              document.getElementById("reportTitle").textContent = target.name;
+              document.getElementById("reportLbl").textContent = target.isEv
+                ? (STATE.lang === "es" ? "Tarifa cargador ($/kWh)" : "Charger rate ($/kWh)")
+                : (STATE.lang === "es" ? "Nuevo precio en bomba ($/gal)" : "New pump price ($/gal)");
+              document.getElementById("reportInput").value = target.pumpPrice.toFixed(2);
+              document.getElementById("reportModal").classList.add("open");
+              break;
+            }
+
+            case "open-log-station": {
+              const st = getComputedLocalItems().find(i => i.id === actionEl.dataset.id) || null;
+              openLogModal(st);
+              break;
+            }
+
+            case "open-new-log":
+              openLogModal(null);
+              break;
+
+            case "delete-log":
+              STATE.fuelLogs = STATE.fuelLogs.filter(l => l.id !== actionEl.dataset.id);
+              renderFuelLog();
+              showToast(STATE.lang === "es" ? "Registro eliminado" : "Entry deleted");
+              break;
+
+            case "open-garage":
+              renderGarageModal();
+              document.getElementById("garageModal").classList.add("open");
+              break;
+
+            case "set-garage-type":
+              STATE.garageType = actionEl.dataset.type;
+              document.querySelectorAll(".garage-type").forEach(b => {
+                b.classList.toggle("active", b.dataset.type === STATE.garageType);
+              });
+              renderGarageModal();
+              break;
+
+            case "set-garage-brand":
+              STATE.garageBrand = actionEl.dataset.brand;
+              renderGarageModal();
+              break;
+
+            case "pick-vehicle": {
+              const v = VEHICLES.find(x => x.id === actionEl.dataset.id);
+              if (!v) return;
+              STATE.vehicleId = v.id;
+              STATE.vehicleName = v.name;
+              STATE.vehicleEmoji = v.emoji;
+              STATE.cap = v.cap;
+              STATE.eff = v.eff;
+              STATE.grade = v.type === "ev" ? "ev" : (v.grade || "regular");
+              syncVehicleUI();
+              document.getElementById("garageModal").classList.remove("open");
+              if (STATE.view === "trip") computeAndRenderTrip();
+              else renderLocalView();
+              showToast(`${v.emoji} ${v.name}`);
+              break;
+            }
+
+            case "apply-custom-car": {
+              const name = document.getElementById("customNameIn").value.trim() || "Mi Auto";
+              const cap = parseFloat(document.getElementById("customCapIn").value) || 18;
+              const eff = parseFloat(document.getElementById("customEffIn").value) || 21;
+              STATE.vehicleId = "custom";
+              STATE.vehicleName = name;
+              STATE.vehicleEmoji = "🚘";
+              STATE.cap = cap;
+              STATE.eff = eff;
+              syncVehicleUI();
+              document.getElementById("garageModal").classList.remove("open");
+              renderLocalView();
+              showToast(`🚘 ${name}`);
+              break;
+            }
+
+            case "calc-trip":
+              computeAndRenderTrip();
+              break;
+
+            case "trip-preset":
+              document.getElementById("tripFromInput").value = actionEl.dataset.from;
+              document.getElementById("tripToInput").value = actionEl.dataset.to;
+              computeAndRenderTrip();
+              break;
+
+            case "set-trip-round":
+              STATE.tripRound = actionEl.dataset.round === "1";
+              document.getElementById("tripOneWayBtn").classList.toggle("active", !STATE.tripRound);
+              document.getElementById("tripRoundBtn").classList.toggle("active", STATE.tripRound);
+              computeAndRenderTrip();
+              break;
+
+            case "map-zoom-in":
+              STATE.mapZoom = Math.min(2.4, Number((STATE.mapZoom + 0.25).toFixed(2)));
+              if (STATE.view === "trip") renderMap([]);
+              else renderMap(getComputedLocalItems());
+              break;
+
+            case "map-zoom-out":
+              STATE.mapZoom = Math.max(0.75, Number((STATE.mapZoom - 0.25).toFixed(2)));
+              if (STATE.view === "trip") renderMap([]);
+              else renderMap(getComputedLocalItems());
+              break;
+
+            case "map-reset":
+              STATE.mapZoom = 1;
+              STATE.mapPanX = 0;
+              STATE.mapPanY = 0;
+              if (STATE.view === "trip") renderMap([]);
+              else renderMap(getComputedLocalItems());
+              break;
+
+            case "close-modal":
+              if (actionEl.dataset.modal) {
+                document.getElementById(actionEl.dataset.modal).classList.remove("open");
+              }
+              break;
+          }
+        });
+
+        // Input & Form listeners
+        attachAutocomplete("locationSearchInput", "locationAcMenu", applyNewLocation);
+        attachAutocomplete("tripFromInput", "tripFromAcMenu", computeAndRenderTrip);
+        attachAutocomplete("tripToInput", "tripToAcMenu", computeAndRenderTrip);
+
+        document.getElementById("garageSearch").addEventListener("input", renderGarageModal);
+
+        document.getElementById("quickCapInput").addEventListener("input", e => {
+          const val = parseFloat(e.target.value);
+          if (val > 0) { STATE.cap = val; syncVehicleUI(); renderLocalView(); }
+        });
+
+        document.getElementById("quickEffInput").addEventListener("input", e => {
+          const val = parseFloat(e.target.value);
+          if (val > 0) { STATE.eff = val; syncVehicleUI(); renderLocalView(); }
+        });
+
+        document.getElementById("tripStartSlider").addEventListener("input", e => {
+          STATE.tripStartPct = Number(e.target.value);
+          document.getElementById("tripStartVal").textContent = `${STATE.tripStartPct}%`;
+          computeAndRenderTrip();
+        });
+
+        document.getElementById("tripReserveSlider").addEventListener("input", e => {
+          STATE.tripReservePct = Number(e.target.value);
+          document.getElementById("tripReserveVal").textContent = `${STATE.tripReservePct}%`;
+          computeAndRenderTrip();
+        });
+
+        document.getElementById("reportForm").addEventListener("submit", e => {
+          e.preventDefault();
+          const val = parseFloat(document.getElementById("reportInput").value);
+          if (STATE.reportingId && val > 0) {
+            if (!STATE.priceOverrides[STATE.reportingId]) STATE.priceOverrides[STATE.reportingId] = {};
+            STATE.priceOverrides[STATE.reportingId][STATE.grade] = Number(val.toFixed(2));
+            document.getElementById("reportModal").classList.remove("open");
+            renderLocalView();
+            showToast(STATE.lang === "es" ? `Precio actualizado a $${val.toFixed(2)}` : `Price updated to $${val.toFixed(2)}`);
+          }
+        });
+
+        document.getElementById("logUnitsIn").addEventListener("input", updateLogPreview);
+        document.getElementById("logPriceIn").addEventListener("input", updateLogPreview);
+        document.getElementById("logMilesIn").addEventListener("input", updateLogPreview);
+
+        document.getElementById("logForm").addEventListener("submit", e => {
+          e.preventDefault();
+          const station = document.getElementById("logStationIn").value.trim();
+          const units = parseFloat(document.getElementById("logUnitsIn").value) || 0;
+          const price = parseFloat(document.getElementById("logPriceIn").value) || 0;
+          const miles = parseFloat(document.getElementById("logMilesIn").value) || null;
+          if (!station || units <= 0 || price <= 0) return;
+
+          const total = Number((units * price).toFixed(2));
+          const mpg = miles && units > 0 && STATE.grade !== "ev" ? Number((miles / units).toFixed(1)) : null;
+
+          STATE.fuelLogs.unshift({
+            id: "l_" + Date.now(),
+            date: "2026-11-18",
+            station,
+            units,
+            price,
+            total,
+            miles,
+            mpg,
+            isEv: STATE.grade === "ev"
+          });
+
+          document.getElementById("logModal").classList.remove("open");
+          renderFuelLog();
+          showToast(STATE.lang === "es" ? `Carga guardada ($${total.toFixed(2)})` : `Fill-up saved ($${total.toFixed(2)})`);
+        });
+
+        // Map Drag Panning
+        const viewport = document.getElementById("mapViewport");
+        let dragging = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        viewport.addEventListener("pointerdown", e => {
+          if (e.target.closest("button")) return;
+          dragging = true;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        });
+
+        window.addEventListener("pointermove", e => {
+          if (!dragging) return;
+          STATE.mapPanX += e.clientX - lastX;
+          STATE.mapPanY += e.clientY - lastY;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          if (STATE.view === "trip") renderMap([]);
+          else renderMap(getComputedLocalItems());
+        });
+
+        window.addEventListener("pointerup", () => {
+          dragging = false;
+        });
+
+        // Responsive Map Redraw on Resize
+        if (typeof ResizeObserver !== "undefined") {
+          const ro = new ResizeObserver(() => {
+            if (STATE.view === "trip") renderMap([]);
+            else if (STATE.view === "local") renderMap(getComputedLocalItems());
+          });
+          ro.observe(viewport);
+        }
+        window.addEventListener("resize", () => {
+          if (STATE.view === "trip") renderMap([]);
+          else if (STATE.view === "local") renderMap(getComputedLocalItems());
+        });
+      }
+
+      function init() {
+        applyLanguage();
+        syncVehicleUI();
+        bindEvents();
+        renderLocalView();
+        renderFuelLog();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
